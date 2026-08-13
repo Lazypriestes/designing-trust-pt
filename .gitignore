@@ -16,3 +16,6 @@ package-lock.json
 
 # ── local tool state (machine-specific, not shared) ─────────────────
 .claude/settings.local.json
+
+# GitHub Pages deploy workflow — add via web UI (token lacks workflow scope)
+.github/workflows/

@@ -79,9 +79,7 @@ window.Tasks = (function () {
       id: "t" + tile.key,
       rank: tile.key + 1,
       title: tile.text,
-      detail: "",
       thought: tile.thought || "",
-      icon: "",
     }));
   }
 
@@ -99,7 +97,7 @@ window.Tasks = (function () {
 
   // The AI's suggested ranking. Normally the correct order; with `withError`
   // the task's scriptedError.swapKeys pair is swapped, so the AI suggests a
-  // plausible-but-wrong order (turned on per stage via Config.CONDITION_TASKS).
+  // plausible-but-wrong order (turned on per round via Config.GROUP_TASKS).
   // correctOrderFor stays the ground truth for scoring either way.
   function aiRankingFor(id, withError) {
     const order = correctOrderFor(id);

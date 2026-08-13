@@ -1,19 +1,20 @@
 # BDR x DFKI — Triage Prototype
 
-A within-subjects HCI study prototype. Participants order six process steps per task
-across four conditions, with varying degrees of AI assistance.
+A **between-subjects** HCI study prototype. Every participant orders six process steps
+per task, first unassisted, then with **one** of four AI interactions — which one is
+decided by a balanced draw, so the four groups fill up evenly without anyone watching.
 
-Flow: **consent → pre-survey → task × plan → post-survey → debrief → end**
+| Group | Mechanic | AI explains itself |
+|---|---|---|
+| **G1** | Handoff — shared cursor; the AI takes over while your cursor rests in the activation zone | — |
+| **G2** | Handoff | a panel narrates what it is about to do |
+| **G3** | Hint — picking a step up highlights the slot the AI would choose | — |
+| **G4** | Hint | the highlight carries the AI's stated reasoning |
 
-Two screens sit *outside* that flow:
+It is a 2×2: **mechanic** (handoff / hint) × **explanation** (off / on).
 
-- **Desktop gate** — shown instead of everything else on a touch device. The AI is
-  embodied *as a cursor*, so a phone or tablet cannot run this study at all; this is a
-  capability gate, not a layout problem a responsive tweak could fix. It keys off
-  `(pointer: coarse)` / `(hover: none)` rather than screen width, so a desktop user
-  with a small window is never blocked, and it re-checks on resize/orientation change.
-- **End screen** — a terminal "Thank you for participating" reached by the button on
-  the debrief. It has no way forward, so there is no doubt the session is over.
+Flow: **consent → pre-survey → task 1 (unassisted) × rounds → task 2 (the group's AI
+interaction) × rounds → post-survey → debrief → end**
 
 Plain static HTML/CSS/JS — no build step, no dependencies. Each module is a global
 (`window.Config`, `window.Tasks`, …) loaded in dependency order by `index.html`.
@@ -36,138 +37,107 @@ Set a different port with `PORT=9000 npm start`.
 `index.html`.** The preview browser caches hard (the server sends no ETag) and will
 otherwise serve stale code. These queries can be dropped when baking to a single file.
 
-## Files
+<details>
+<summary><b>Two screens sit outside the flow</b> — the desktop gate and the end screen</summary>
+
+- **Desktop gate** — shown instead of everything else on a touch device. The AI is
+  embodied *as a cursor*, so a phone or tablet cannot run this study at all; this is a
+  capability gate, not a layout problem a responsive tweak could fix. It keys off
+  `(pointer: coarse)` / `(hover: none)` rather than screen width, so a desktop user
+  with a small window is never blocked, and it re-checks on resize/orientation change.
+- **End screen** — a terminal "Thank you for participating" reached by the button on
+  the debrief. It has no way forward, so there is no doubt the session is over.
+
+</details>
+
+<details>
+<summary><b>What each file does</b></summary>
 
 | File | Role |
 |---|---|
-| `server.js` | Serves the app **and** the `/collect-logs` collector that writes `logs/` |
-| `logs/` | Participant data — session snapshots + the event stream (never web-readable) |
+| `server.js` | Serves the app, hands out balanced groups (`/assign-group`), and collects logs (`/collect-logs`) |
+| `logs/` | Participant data — session snapshots, the event stream, and the group ledger (never web-readable) |
 | `index.html` | All screens as `<section class="screen">`, toggled via `[hidden]` |
 | `styles-accessible.css` | The active stylesheet |
 | `strings.json` | **All interface text + the questionnaires**, `de` and `en` side by side |
 | `task_thought.json` | Task content — 30 bilingual process-ordering tasks (A01–A30) |
-| `js/config.js` | **Study settings** — conditions, task assignment, seed, endpoint |
+| `js/config.js` | **Study settings** — groups, rounds, task assignment, seed, endpoints |
+| `js/groups.js` | Draws this participant's group from the server; local fallback + dev override |
 | `js/i18n.js` | Active language + string lookup with cross-language fallback |
 | `js/tasks.js` | Holds both languages; builds cards, correct order, AI suggestion, seeded shuffle |
 | `js/hints.js` | Registry of AI-hint designs; `js/hint_*.js` is one variant each |
-| `js/store.js` | Session state, localStorage autosave, remote-POST stub |
+| `js/store.js` | Session state, localStorage autosave, sync to the collector |
 | `js/flow.js` | The linear step machine |
 | `js/survey.js` | Renders/validates the pre & post questionnaires |
-| `js/task.js` | The ranking interaction: custom drag, AI cursor engine (handoff + autopilot) |
+| `js/task.js` | The ranking interaction: custom drag, the AI cursor engine (handoff) |
 | `js/results.js` | The final debrief grid |
 | `js/main.js` | Boot: fetch content, consent, resume, wiring |
+
+</details>
 
 ## Configuring a study
 
 Everything you'd normally change lives in `js/config.js`.
 
-**Conditions** (`CONDITIONS`) — `ai` picks the mechanic:
+**The design** — a baseline everyone runs, then one group each:
+
+```js
+const BASELINE = { key: "c1", ai: "solo", teachBoard: true };   // task 1 — ground truth
+
+const GROUPS = {
+  G1: { key: "g1", ai: "handoff" },
+  G2: { key: "g2", ai: "handoff", thoughts: true },
+  G3: { key: "g3", ai: "hint" },
+  G4: { key: "g4", ai: "hint", thoughts: true },
+};
+```
+
+Two switches describe every group, and they are the study's two factors — read down
+the `thoughts` column and the 2×2 is right there.
+
+`ai` picks the mechanic:
 
 | `ai` | What the participant sees |
 |---|---|
 | `solo` | No assistance. Establishes that they understood the task. |
-| `hint` | The AI suggests where a step goes; `hint:` names which design does it (below). |
-| `handoff` | **Shared cursor.** The participant works normally, but after `idleMs` of no input the AI takes the cursor and carries on; any input hands it straight back. Add `thoughts: true` to narrate its reasoning as it acts. |
-| `autopilot` | An AI cursor sorts all six steps uninterrupted; the participant then reviews and may rearrange. |
+| `hint` | The AI suggests where a step goes, at pick-up time. |
+| `handoff` | **Shared cursor.** The participant works normally, but while the cursor rests inside the activation zone the AI takes the cursor and carries on; leaving the zone hands it straight back. |
 
-### AI cursor settings (`Config.AI_CURSOR`)
+`thoughts: true` means **the AI explains itself** — the same switch in both mechanics,
+which is what makes G1:G2 and G3:G4 the same comparison. It renders differently because
+the mechanics differ, not because the manipulation does: a handoff group gets the panel
+above the board narrating what the AI is about to do, a hint group gets the suggested
+slot with the AI's stated reasoning attached. Which hint design implements that is
+resolved by `Config.hintVariantFor()`, so the group table names no filenames.
 
-Shared by `handoff` and `autopilot`. Any condition can override a value inline,
-e.g. `{ ai: "handoff", speed: 40, hesitate: true }`.
+`teachBoard` is the baseline's alone: it marks the round that introduces the board, so
+task 1's onboarding hides the ladder column and reveals it as the participant steps
+through. By task 2 the board is familiar and both columns stay put.
 
-| Key | Meaning |
-|---|---|
-| `speed` | 0–100 → cursor travel speed (maps to 230–3200 px/s) |
-| `hesitate` | Thinking pauses and second-guess approach curves — makes the AI look deliberative |
-| `idleMs` | `handoff` only: no input for this long → the AI steps in |
-| `startGraceMs` | **Reading window** — the AI stays out for this long after the explainer is dismissed (default 5000) |
-| `userSpeedControl` | Show the **participant** a speed slider in the footer |
+Adding or removing a group is a one-entry edit: add its text under `conditions.<key>` in
+`strings.json` (both languages) and the balancer picks it up on the next restart. Set
+`BDR_GROUPS` if the server should balance a different set than its default `G1,G2,G3,G4`.
 
-> **On `startGraceMs`:** the explainer is dismissed at the same instant the task text
-> first becomes visible, so without a pause the AI would be moving before anyone had
-> read what the task is — and in `autopilot` the participant could miss the task
-> entirely. During the window nothing moves: `handoff` cannot take over however idle
-> the participant is, and `autopilot` has not started (its footer says so, and
-> `autopilotMs` still measures only the sorting). The explainers tell participants the
-> AI will step in "after a few seconds" rather than naming a number, so changing this
-> value keeps them truthful. `0` disables the wait.
-
-> **On `userSpeedControl`:** good for accessibility — fast cursor motion is genuinely
-> disorienting for some people — but it makes AI speed a participant-controlled
-> variable, so `workMs` stops being comparable across people and it may interact with
-> perceived agency. Every change is logged (`ai_speed_changed`), and the value in force
-> is stored on each result as `cursorSpeed`. Consider setting it `false` for the real
-> study once piloting is done.
-
-The two designs are **not** the same abstraction: a hint is a suggestion at pick-up
-time, a handoff is shared control. That's why handoff is a mechanic rather than a hint
-variant — forcing it into the `onPickUp` contract would have made that contract
-meaningless. To A/B the two designs, swap the `ai:` value in `CONDITIONS`; both remain
-fully working.
-
-The AI never blocks the participant: in every condition the final order is theirs to
-set, and `Confirm ranking` is the only way forward. Autopilot cannot be interrupted
-mid-run (by design), but everything is editable once it finishes.
-
-### Hint variants (A/B testing a design)
-
-Competing hint designs live side by side so you can compare them without a branch,
-and drop the loser without leftovers. Each variant is **one self-contained file**
-registered by name; `task.js` calls the active one through a fixed interface and
-never names a variant.
-
-| Variant | File | Behaviour |
-|---|---|---|
-| `slot` | `js/hint_slot.js` | Highlights the slot the AI suggests |
-| `slot-reasoning` | `js/hint_slot_reasoning.js` | That, plus the AI's stated reasoning |
-
-A stage picks one in `CONDITIONS`, so swapping designs is a one-value change:
+**Rounds and which task runs in each** (`BASELINE_TASKS`, `GROUP_TASKS`):
 
 ```js
-2: { key: "c2", ai: "hint", hint: "slot" },
-3: { key: "c3", ai: "hint", hint: "slot-reasoning" },
+const BASELINE_TASKS = ["A01", "A05"];                      // task 1, two rounds
+const GROUP_TASKS    = ["A02", { id: "A06", aiError: true }]; // task 2, two rounds
 ```
 
-**Add** a variant: create `js/hint_<name>.js` calling `Hints.register(name, {...})`,
-add its `<script>` tag, point a condition at it. The contract (`onPickUp`, optional
-`onMove`/`onDrop`, required `clear`, plus its own `badgeKey`/`hintKey`) is documented
-at the top of `js/hints.js`. The `ctx` it receives exposes the AI's suggestion — which
-already carries any scripted error — but **never show `ctx.trueSlot`**: that's the
-answer, and it exists for logging only.
-
-**Remove** a variant: delete its file, its `<script>` tag, and any config naming it.
-Nothing else refers to it. A stage pointing at a missing variant warns in the console
-and simply renders no hint — it does not break the task.
-
-The active variant is recorded on `task_start`, on each result (`hintVariant`), and on
-every `hint_shown` event, so runs stay attributable to the design they used.
-
-**Which task runs in which condition** (`CONDITION_TASKS`):
-
-```js
-const CONDITION_TASKS = {
-  1: ["A01"],                         // AI suggests the correct order
-  2: ["A02", "A07"],                  // repeats the condition — one stage per id
-  3: [{ id: "A03", aiError: true }],  // AI suggests a WRONG order
-  4: ["A04"],
-};
-```
-
-Listing several ids repeats the condition, one stage per id. The **explainer opens by
-itself only on the first stage of a condition** — it describes the mechanic, not the
-task, so re-reading it before every repeat is friction. The ⓘ button reopens it at any
-time, and `task_start` records `newSection` / `explainerAutoShown` so the difference is
-visible in the data.
+**One entry = one round**, in the order listed — that is where you set how many rounds
+each stage runs. All groups run the same `GROUP_TASKS` ids, so the only thing that
+differs between groups is the AI mechanic.
 
 With `aiError`, the AI's suggestion swaps that task's `scriptedError.swapKeys` pair —
 a plausible-but-wrong recommendation, to observe whether participants catch it. It
 flows into whichever mechanic the condition uses: the highlighted slot (`hint`), the
 reasoning text (each swapped tile gets its own `wrongThought`, arguing for the slot the
-AI actually put it in), and the places the autopilot drops steps into.
+AI actually put it in), and the slots the shared cursor drops steps into.
 
 **Scoring is unaffected**: the original tile order stays ground truth, so accepting a
 bad suggestion verbatim scores 4/6 with 0 overrides, while spotting and fixing it
-scores 6/6 with 2 overrides. Inert on `solo` conditions.
+scores 6/6 with 2 overrides. Inert on the unassisted baseline rounds.
 
 **Tile shuffle** (`SHUFFLE_SEED`) — the inbox order is seeded, not random: identical
 for every participant, different per task. Change the string to reshuffle all tasks
@@ -181,15 +151,172 @@ identical in `de` and `en`, or answers will land in different columns per partic
 in `server.js`. Set `""` for localStorage-only, or an absolute URL for a hosted
 collector. See *Saving data* below.
 
-## Languages
+### The onboarding tile
 
-German is the default (`I18n.DEFAULT_LANG`); a DE/EN switcher sits fixed top-right on
-every screen.
+Every condition opens with a short **stepped onboarding** — one idea per tile, dismissed
+with OK — held in `strings.json` under `conditions.<key>.onboarding` as an array of
+`{ body, ok }`. G1–G4 each explain their AI in three steps, following the same shape
+(what the AI does → how it works → who decides) so the wording differs only where the
+condition itself does.
+
+Task 1 (`teachBoard`) instead introduces the screen **one region at a time**: while a
+step is up, the region it talks about is the only one showing — the task brief alone,
+then the inbox, then the ladder. The brief is never hidden; it simply stands alone while
+both columns are, which is also why its step can promise it stays put.
+
+> That mapping is **positional** — step 0 is the brief, step 1 the inbox, the last step
+> the ladder — so c1's `onboarding` entries have to stay in that order, in both
+> languages. It is the one place where the order of strings carries behaviour;
+> `BOARD_INTRO` in `js/task.js` is the other half of it.
+
+It **opens by itself only on the first round of a stage** — it describes the interaction,
+not the task, so re-reading it before every round is friction. The ⓘ button reopens it
+at any time, as one combined window rather than a re-run of the sequence. `task_start`
+records `newSection` / `explainerAutoShown`, and each OK logs `explainer_step`, so the
+reading path is visible in the data.
+
+A condition can define a single `explainer` string instead of `onboarding` to get one
+plain window.
+
+<details>
+<summary><b>AI cursor settings</b> (<code>Config.AI_CURSOR</code>) — speed, the rest after each placement, the participant slider</summary>
+
+Used by `handoff` (G1/G2). Any group can override a value inline,
+e.g. `{ ai: "handoff", speed: 40, hesitate: true }`.
+
+| Key | Meaning |
+|---|---|
+| `speed` | 0–100 → cursor travel speed (maps to 57.5–800 px/s) |
+| `pauseAfterPlaceMs` | How long the cursor rests after dropping each step before going for the next (default 1000) |
+| `hesitate` | Thinking pauses and second-guess approach curves — makes the AI look deliberative |
+| `userSpeedControl` | Show the **participant** a speed slider in the footer (off — see below) |
+
+> **On `userSpeedControl`:** now `false`. It is good for accessibility — fast cursor
+> motion is genuinely disorienting for some people — but it makes AI speed a
+> participant-controlled variable, so `workMs` stops being comparable across people and
+> it may interact with perceived agency. The accessibility case also weakened once the
+> cursor slowed to 265 px/s with a 1 s rest between steps. Set it `true` to bring the
+> slider back; every change is logged (`ai_speed_changed`) and the value in force is
+> stored on each result as `cursorSpeed` either way.
+
+> **There is no longer a reading window.** `startGraceMs` used to hold the AI back for
+> the first few seconds of a stage, because the onboarding is dismissed at the same
+> instant the task text first becomes visible. The activation zone made it redundant:
+> nothing moves until the participant deliberately parks the cursor in the zone, so they
+> read the task in their own time and the wait was only friction. Removed 2026-08-12.
+
+The two designs are **not** the same abstraction: a hint is a suggestion at pick-up
+time, a handoff is shared control. That's why handoff is a mechanic rather than a hint
+variant — forcing it into the `onPickUp` contract would have made that contract
+meaningless. G1/G2 and G3/G4 run the two designs against each other by construction;
+both remain fully working.
+
+The AI never blocks the participant: in every group the final order is theirs to set,
+and `Confirm ranking` is the only way forward. Even while the AI is sorting, moving the
+cursor out of the zone takes control straight back, and everything stays editable.
+
+</details>
+
+<details>
+<summary><b>Hint variants</b> — how the two hint designs are registered, and how to A/B a third</summary>
+
+Competing hint designs live side by side so you can compare them without a branch,
+and drop the loser without leftovers. Each variant is **one self-contained file**
+registered by name; `task.js` calls the active one through a fixed interface and
+never names a variant.
+
+| Variant | File | Behaviour |
+|---|---|---|
+| `slot` | `js/hint_slot.js` | Highlights the slot the AI suggests |
+| `slot-reasoning` | `js/hint_slot_reasoning.js` | That, plus the AI's stated reasoning |
+
+These two **are** the explanation switch, so `Config.hintVariantFor()` picks between
+them from `thoughts` and no group names a file. To A/B a third design against one of
+them, pin it on a group explicitly — that override is the only reason `hint:` still
+exists:
+
+```js
+G3: { key: "g3", ai: "hint", hint: "slot-arrow" },   // beats the thoughts default
+```
+
+**Add** a variant: create `js/hint_<name>.js` calling `Hints.register(name, {...})`,
+add its `<script>` tag, pin it on a group. The contract (`onPickUp`, optional
+`onMove`/`onDrop`, required `clear`, plus its own `badgeKey`/`hintKey`) is documented
+at the top of `js/hints.js`. The `ctx` it receives exposes the AI's suggestion — which
+already carries any scripted error — but **never show `ctx.trueSlot`**: that's the
+answer, and it exists for logging only.
+
+**Remove** a variant: delete its file, its `<script>` tag, and any config naming it.
+Nothing else refers to it. A group pointing at a missing variant warns in the console
+and simply renders no hint — it does not break the task.
+
+The active variant is recorded on `task_start`, on each result (`hintVariant`), and on
+every `hint_shown` event, so runs stay attributable to the design they used.
+
+</details>
+
+## Group assignment (how the four cells stay even)
+
+The study is between-subjects and unattended, so nobody is standing by to keep G1–G4
+balanced — and a coin flip per participant does not do it: at n ≈ 40 a fair random draw
+still lands cells of 6 and 14 often enough to matter. The tally therefore lives on the
+server.
+
+```
+POST /assign-group          {participantId}  →  {group, counts, reused}
+GET  /assign-group/status                    →  per-group counts, mid-study
+```
+
+`js/groups.js` draws **once**, at Begin, and the group is pinned onto the session — a
+reload or a resume reuses it, and the server is idempotent per participant id as a
+second guard, so one participant can never occupy two cells.
+
+**What counts towards a cell** (`logs/groups.json`, one record per participant):
+
+- every **finished** session, forever
+- every assignment still **in flight**, until it expires (`BDR_RESERVE_MS`, default
+  45 min)
+
+The expiry is what makes this dropout-proof: someone handed G3 who closes the tab during
+the pre-survey holds the slot only until the window passes, after which the next
+participant is sent to G3. The cells therefore even out in *completed* participants,
+which is what the analysis needs. Ties are broken at random, and every read-modify-write
+runs on one queue, so two people arriving in the same millisecond cannot both be sent to
+the same cell.
+
+Each session records **how** its group was decided, as `groupSource`:
+
+| Value | Meaning |
+|---|---|
+| `server` | The balanced draw — the normal case |
+| `local` | The endpoint was unreachable, so the browser picked at random. A participant is never blocked by our infrastructure; the collector still learns the group on the first sync and compensates for it in later draws. |
+| `dev` | Forced from the dev picker. **Excluded from the counts entirely**, so testing never distorts the balance. |
+
+Set `ASSIGN_URL = ""` in `js/config.js` to skip the draw altogether (every participant
+then gets a local random group). Verified: 20 simulated participants — including 12
+arriving simultaneously — landed exactly 5/5/5/5; 12 abandoned assignments expired and
+the following draws refilled the emptied cells.
+
+### Dev controls
+
+With `CONFIG.devMode: true`, a bottom-right bar appears: a **group picker** (G1–G4) next
+to the **Skip ▸** button. Both vanish when `devMode` is `false`. Changing the picker
+switches the session's group immediately — if you are standing on the AI task it restarts
+that round with the new mechanic — and marks the session `groupSource: "dev"`, so it is
+kept out of the balancing counts.
+
+<details>
+<summary><b>Languages</b> — DE/EN side by side, live switching, and why the switch is safe mid-task</summary>
+
+German is the default (`DEFAULT_LANG` in `js/i18n.js`); a DE/EN switcher sits fixed
+top-right on every screen.
 
 All interface text lives in `strings.json` with **both languages side by side**, so a
 missing or stale translation is obvious at a glance. Lookup is by dot path
 (`I18n.t("ui.task.confirm")`); a key missing in the active language falls back to the
-other one and logs a console warning rather than rendering blank.
+other one and logs a console warning rather than rendering blank. Keys that only *some*
+stages define are asked for with `I18n.opt()` instead, which is silent when the key is
+absent everywhere but still warns when one language has drifted from the other.
 
 **Switching is a live re-render, never a reload**, and it is safe by construction:
 `task_thought.json` stores each task's *structure* once and only its *prose* per
@@ -199,7 +326,8 @@ visible text changes.
 
 Everything that follows the language hangs off a single `I18n.onChange` listener, so
 any call to `I18n.set` repaints the whole UI; the switcher can never show a different
-language than the screen does.
+language than the screen does. A switch mid-onboarding re-renders the step you are on,
+in the new language, without restarting the sequence.
 
 Because a mid-task switch is allowed, **the language is recorded as study data**:
 `session.lang`, `lang` on every `task_start` and result, and a `language_switch` event
@@ -209,7 +337,10 @@ analysed separately, or excluded.
 Adding a language: add a block to `strings.json`, add a matching key to each task's
 `de`/`en` blocks, extend `LANGS` in `js/i18n.js`, and add a button to `#lang-switch`.
 
-## Task content
+</details>
+
+<details>
+<summary><b>Task content format</b> — the bilingual <code>task_thought.json</code> and its scripted errors</summary>
 
 `task_thought.json` is bilingual. **Structure is shared, prose is per language** — so
 `id`, `tiles[].key` and `scriptedError.swapKeys` exist exactly once and *cannot*
@@ -252,7 +383,11 @@ reading the AI's reasoning would notice the seam rather than the error. (A plain
 is still accepted and applies to both tiles, but the two-entry form is the norm.)
 
 `tiles[].key` is the **correct 0-based position** and is the ground truth for all
-scoring. `thought` / `wrongThought` are not surfaced in the UI yet.
+scoring. `thought` is the AI's justification for a step: it feeds the narration panel
+(G2) and the reasoning attached to a hint (G4), and `wrongThought` replaces it on the
+two swapped tiles when `aiError` is on. Groups without `thoughts` never show either.
+
+</details>
 
 ## Saving data
 
@@ -275,13 +410,15 @@ failed POST is repaired by the next one, so a network drop costs nothing. Verifi
 killing the server mid-session — 12 events accumulated locally and were recovered
 intact, in order, with no duplication (including the failed-sync records themselves).
 
-The server writes two things:
+<details>
+<summary><b>What the server writes</b>, and the privacy guards around it</summary>
 
 - `logs/sessions/<participantId>.json` — the full session, rewritten each sync
   (atomically, via temp file + rename). **The record of truth.**
 - `logs/events.jsonl` — append-only stream across participants, one event per line,
   tagged with `participantId`, `lang` and `serverTimestamp`. Only events the server
   hasn't seen are appended, so there are no duplicates.
+- `logs/groups.json` — the group ledger the balancer reads and writes.
 
 > Two files, not one, because the client re-sends the whole session every time —
 > blindly appending would grow quadratically. The snapshot's event count tells the
@@ -290,7 +427,7 @@ The server writes two things:
 Writes are serialised per participant, so two concurrent step boundaries can't
 interleave inside a line.
 
-### Privacy and safety
+**Privacy and safety**
 
 - **`logs/` is blocked from HTTP** (403). It sits inside the served directory, so
   without that guard `GET /logs/<id>.json` would hand one participant another's data.
@@ -303,51 +440,60 @@ interleave inside a line.
 - Errors return plain JSON; Express's default HTML error page leaks stack traces with
   absolute filesystem paths, which matters once the port is forwarded.
 
-## Data
+</details>
+
+<details>
+<summary><b>What one session contains</b> — the saved object and every logged event</summary>
 
 One session object, autosaved to `localStorage["bdr_triage_session"]`, resumable on
 reload. `Store.download()` exports it as JSON from the console.
 
-- `plan` — the expanded `[{level, taskId, aiError}]` stages
+- `group` / `groupSource` — the assigned AI group (G1–G4) and how it was decided
+- `plan` — the expanded `[{stage, taskId, aiError}]` rounds (`stage` is `"baseline"` or `"ai"`)
 - `lang` — the language the session ran in (last selected)
 - `surveys` — pre/post answers
-- `results` — per task: `ranking`, `score` (/6, vs. the true order), `overrides`
-  (deviations from the AI), `aiError`, `lang`, `hintVariant`, the shared-control
+- `results` — per round: `stage`, `group`, `condition`, `ranking`, `score` (/6, vs. the
+  true order), `overrides` (deviations from the AI), `aiError`, `lang`, `hintVariant`, the shared-control
   counts (`aiTakeovers`, `userTakebacks`, `placedByAi`, `cursorSpeed`,
   `cursorHesitate`), plus the timing block below
 - `events` — timestamped log (`ts` absolute, `tRel` ms since page load):
-  - session — `session_start`, `consent`, `session_resumed`, `session_end`, `dev_skip`,
+  - session — `session_start`, `group_assigned` (group, source, and the counts at draw
+    time — the study's randomisation record), `consent`, `session_resumed`,
+    `session_end`, `session_closed`, `dev_skip`, `group_override` (dev picker),
     `language_switch` (which language, and at which step)
   - task — `task_start` (incl. `inboxOrder`, `aiSuggestion`, `aiSwappedKeys`), `task_confirm`
-  - interaction — `drag_start`, `drag_drop`, `explainer_shown`, `explainer_dismissed`
+  - interaction — `drag_start`, `drag_drop`, `explainer_shown`, `explainer_step`
+    (which onboarding step they advanced to), `explainer_dismissed`
   - AI (hint) — `hint_shown` (which slot was hinted, the variant, whether reasoning
     was shown, `isWrongHint`)
-  - AI (cursor) — `handoff_armed` / `autopilot_armed` (stage ready, AI still holding
-    off for `startGraceMs`), `autopilot_start` (the window has passed — it begins),
+  - AI (cursor) — `handoff_armed` (stage ready; the AI acts once the cursor enters the
+    activation zone),
     `ai_took_over` / `user_took_back` (each with `nth`
     and `placedSoFar`, so the whole tug-of-war is reconstructable), `ai_placement`,
-    `ai_thought_shown` (incl. `isWrongThought`), `handoff_done` / `autopilot_done`,
+    `ai_thought_shown` (incl. `isWrongThought`), `handoff_done`,
     `ai_speed_changed`
   - `ai_override` — per tile the participant moved away from the AI's suggestion; the
     key measure when `aiError` is on
   - surveys — `survey_view`, `survey_submit`
 
-### Task timing
+</details>
 
-The explainer opens *on top of* the task, so a single wall-clock number would fuse
+<details>
+<summary><b>Task timing</b> — the five clocks on every round, and which one to watch</summary>
+
+The onboarding tile opens *on top of* the task, so a single wall-clock number would fuse
 "reading the instructions" with "doing the task" — and reopening the ⓘ button mid-task
-would inflate it further. Each result (and `task_confirm`) therefore carries four
-separate clocks:
+would inflate it further. Each result (and `task_confirm`) therefore carries separate
+clocks:
 
 | Field | Measures |
 |---|---|
 | `elapsedMs` | Total: task screen shown → Confirm. Includes reading and AI time. |
-| `explainerMs` | Cumulative time the explainer was open (all opens summed) |
+| `explainerMs` | Cumulative time the tile was open (all opens summed) |
 | `explainerOpens` | How many times it was opened — `> 1` means they went back to re-read |
 | `workMs` | `elapsedMs − explainerMs` — **actual time on the task** |
-| `timeToFirstActionMs` | First explainer dismissal → first drag (hesitation before acting) |
-| `autopilotMs` | c4 only: how long the AI took to place all six (the reading window is not counted) |
-| `reviewMs` | c4 only: autopilot finished → Confirm, i.e. **how long they reviewed the AI's result before signing it off** |
+| `timeToFirstActionMs` | First dismissal → first drag (hesitation before acting) |
+| `reviewMs` | Every step placed → Confirm, i.e. **how long they reviewed the finished order before signing it off**. Set only when the AI cursor completed the board, so `null` if the participant placed the last step themselves. |
 
 `workMs + explainerMs == elapsedMs` always holds. `explainer_shown` / `explainer_dismissed`
 also carry `taskId`, `reopen`, and the per-open duration (`openMs`), so you can
@@ -356,19 +502,25 @@ reconstruct each reading episode individually rather than only the total.
 `reviewMs` is the one to watch when `aiError` is on: near-zero means the participant
 accepted the AI's order without inspecting it.
 
+</details>
+
 ## Before the real study
 
-- [ ] Confirm `CONFIG.devSkip` is `false` — it hides the bottom-right "Skip ▸" button
-      that jumps past stages (already the default)
+- [ ] Confirm `CONFIG.devMode` is `false` — it hides the bottom-right dev bar (the
+      "Skip ▸" button and the group picker, which would force a group and drop that
+      participant out of the balancing counts)
 - [ ] Confirm `CONFIG.loggingEnabled` is `true` — with it off a completed session leaves
       no file at all (already the default; the console warns on boot when it is off)
-- [ ] Replace the placeholder consent text, condition labels/explainers, and both surveys
+- [ ] Replace the placeholder consent text, group labels/onboarding steps, and both surveys
 - [ ] Set `showCorrectnessFeedback: false` — the debrief currently reveals correct answers,
       a learning confound if participants ever repeat
-- [ ] Keep `logs/` empty until the real runs (it is cleared now)
+- [ ] Clear the pilot data out of `logs/` — `sessions/`, `events.jsonl` and `groups.json`
+      all still hold test runs
 - [ ] Decide where the collector runs (port-forwarded machine vs. hosted) and confirm
       `logs/` is backed up — it is the only copy once a participant clears their browser
-- [ ] Decide the counterbalancing — `buildOrder()` currently returns a fixed `[1,2,3,4]`
-      for every participant
+- [ ] Set the number of rounds — `BASELINE_TASKS` and `GROUP_TASKS` currently run one
+      round each (`A01`, then `A02`)
+- [ ] Check `GET /assign-group/status` reads 0/0/0/0 before the first real participant,
+      and delete `logs/groups.json` if pilot runs left records in it
 - [ ] Decide whether mid-task language switching is acceptable, or should be locked
       once a task starts (it is currently allowed and logged)
