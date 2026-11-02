@@ -440,28 +440,30 @@ window.Config = (function () {
     P01: "G2",   // Bold, Observable → Hidden
     P02: "G1",   // Bold, Hidden → Observable
     P03: "G4",   // Cautious, Observable → Hidden
-    P04: "G3",   // Cautious, Hidden → Observable
-    P05: "G2",   // Bold, Observable → Hidden
-    P06: "G1",   // Bold, Hidden → Observable
-    P07: "G4",   // Cautious, Observable → Hidden
-    P08: "G3",   // Cautious, Hidden → Observable
-    P09: "G2",   // Bold, Observable → Hidden
-    P10: "G1",   // Bold, Hidden → Observable
-    P11: "G4",   // Cautious, Observable → Hidden
-    P12: "G3",   // Cautious, Hidden → Observable
-    P13: "G2",   // Bold, Observable → Hidden
-    P14: "G1",   // Bold, Hidden → Observable
-    P15: "G4",   // Cautious, Observable → Hidden
-    P16: "G3",   // Cautious, Hidden → Observable
-    // G5 (revised assembly) — the letter is the AI of rounds 8–9
-    P17: "G5B",  // G5, bold at the end
-    P18: "G5C",  // G5, cautious at the end
-    P19: "G5B",
-    P20: "G5C",
-    P21: "G5B",
+    /* From P04 on: G5 and G6 take turns (even code G5, odd G6). Within each,
+       the letter (round 8's hidden re-sort: B bold / C cautious) also takes
+       turns, so every four codes cover G5B, G6B, G5C, G6C once. */
+    P04: "G5B",
+    P05: "G6B",
+    P06: "G5C",
+    P07: "G6C",
+    P08: "G5B",
+    P09: "G6B",
+    P10: "G5C",
+    P11: "G6C",
+    P12: "G5B",
+    P13: "G6B",
+    P14: "G5C",
+    P15: "G6C",
+    P16: "G5B",
+    P17: "G6B",
+    P18: "G5C",
+    P19: "G6C",
+    P20: "G5B",
+    P21: "G6B",
     P22: "G5C",
-    P23: "G5B",
-    P24: "G5C",
+    P23: "G6C",
+    P24: "G5B",
     // Test codes — not participants. The session's anonId is the code, so
     // these runs are easy to find and drop from the data.
     G5:  "G5B",  // G5, bold at the end
