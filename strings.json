@@ -15,7 +15,8 @@
         "placeholder": "z. B. P01",
         "next": "Weiter",
         "required": "Bitte geben Sie Ihre Teilnahme-ID ein.",
-        "unknown": "Dieser Code ist nicht bekannt. Bitte prüfen Sie ihn und versuchen Sie es erneut (z. B. P01)."
+        "unknown": "Dieser Code ist nicht bekannt. Bitte prüfen Sie ihn und versuchen Sie es erneut (z. B. P01).",
+        "badSetup": "Dieser Code ist bekannt, aber noch nicht richtig eingerichtet. Bitte wenden Sie sich an das Forschungsteam."
       },
       "task": {
         "inboxHd": "Eingang — offene Fälle ({n} übrig)",
@@ -549,7 +550,8 @@
         "placeholder": "e.g. P01",
         "next": "Continue",
         "required": "Please enter your participant ID.",
-        "unknown": "This code is not recognised. Please check it and try again (e.g. P01)."
+        "unknown": "This code is not recognised. Please check it and try again (e.g. P01).",
+        "badSetup": "This code is known but not set up correctly yet. Please contact the research team."
       },
       "task": {
         "inboxHd": "Inbox — open cases ({n} remaining)",

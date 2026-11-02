@@ -65,6 +65,17 @@ window.AnonId = (function () {
         Store.log("anon_id_rejected", { length: value.length });
         return;
       }
+      /* The code is listed, but the setup it names is not a group — a typo
+         in PARTICIPANT_SETUPS ("G5b", "G55"). Without this the session would
+         quietly stay on FIXED_GROUP and run the wrong study. */
+      const setup = Config.PARTICIPANT_SETUPS[code];
+      if (!Groups.override() && !Config.isGroup(setup)) {
+        console.error(`[BDR] code ${code} points to "${setup}", which is not a group ` +
+                      `(${Config.GROUP_KEYS.join(" / ")}). Fix it in js/config.js PARTICIPANT_SETUPS.`);
+        showError("ui.anonId.badSetup");
+        Store.log("anon_id_rejected", { length: value.length, reason: "bad_setup", code, setup });
+        return;
+      }
     }
 
     hideError();

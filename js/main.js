@@ -279,6 +279,15 @@
       });
     });
 
+    /* A code whose setup is misspelled is refused at the ID screen
+       (js/anon-id.js); say which ones at load, before anyone gets that far. */
+    Object.entries(Config.PARTICIPANT_SETUPS).forEach(([code, g]) => {
+      if (!Config.isGroup(g)) {
+        console.error(`[BDR] PARTICIPANT_SETUPS ${code}: "${g}" is not a group ` +
+                      `(${Config.GROUP_KEYS.join(" / ")}) — this code will be refused.`);
+      }
+    });
+
     /* Same reasoning for the cursor's motion: a character with no preset in
        cursors.json still runs, with every dial off — a bland straight-line
        cursor that looks like a design choice rather than a missing file. The
