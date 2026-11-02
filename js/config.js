@@ -249,12 +249,12 @@ window.Config = (function () {
        character where the plan fixes one; `character` here is the AI of the
        last two rounds (hiddenEnd + showEnd), set per participant code. No
        questionnaires. */
-    G5B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: false },
-    G5C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: false },
+    G5B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: "pre" },
+    G5C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: "pre" },
     /* G6 — the same rounds as G5, but the three bold rounds come first and
        the three cautious ones second (G6_ROUNDS). */
-    G6B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: false },
-    G6C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: false },
+    G6B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: "pre" },
+    G6C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: "pre" },
   };
   const GROUP_KEYS = Object.keys(GROUPS);
 
@@ -378,8 +378,8 @@ window.Config = (function () {
     return ROUND_SETS[r] ? r : null;
   }
 
-  // Does this group run the pre/mid/post questionnaires? G5/G6 switch them
-  // off and ask their own two instead (flow.js).
+  /* Which questionnaires does this group run? G5/G6 keep the opening one
+     (pre) but drop mid/post, asking their own two instead (flow.js). */
   function surveysFor(group) {
     const g = GROUPS[group];
     return !(g && g.surveys === false);

@@ -18,10 +18,14 @@ window.Flow = (function () {
   // Build the sequence from the (already-created/restored) session plan.
   function build() {
     const plan = Store.get().plan || [];
-    /* G5 runs no questionnaires. Rebuilt after the ID step re-pins the group
-       (js/anon-id.js), so a G5 code drops the pre-survey before it is shown. */
-    const surveys = Config.surveysFor(Store.group());
-    const S = Object.assign({}, Config.STEPS, surveys ? {} : { preSurvey: false, midSurvey: false, postSurvey: false });
+    /* G5/G6 run only the opening questionnaire (plus their own two). Rebuilt
+       after the ID step re-pins the group (js/anon-id.js). */
+    const g = Config.GROUPS[Store.group()];
+    const only = g && g.surveys === "pre";   // G5/G6: opening survey only
+    const surveys = Config.surveysFor(Store.group()) && !only;
+    const S = Object.assign({}, Config.STEPS,
+      only ? { midSurvey: false, postSurvey: false }
+           : surveys ? {} : { preSurvey: false, midSurvey: false, postSurvey: false });
     steps = [];
 
     if (S.anonId) steps.push({ type: "anonId" });

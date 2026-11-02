@@ -27,7 +27,7 @@
         "explainerOk": "Alles klar",
         "confirm": "Reihenfolge bestätigen",
         "taskCounter": "Aufgabe {n} von {total}",
-        "brief": "Sie sind Sachbearbeiter:in und sichten die eingegangenen Fälle. Ordnen Sie die sechs Fälle nach Dringlichkeit — der dringendste nach oben, der am wenigsten dringende nach unten. Es gibt keine eine richtige Lösung; entscheiden Sie nach Ihrer eigenen Einschätzung.",
+        "brief": "Sie sind Sachbearbeiter:in und sichten die eingegangenen Fälle. Ordnen Sie die sechs Fälle nach Priorität – der wichtigste nach oben, der am wenigsten wichtige nach unten. Es gibt keine eine richtige Lösung; entscheiden Sie nach Ihrer eigenen Einschätzung.",
         "hints": {
           "solo": "Ziehen Sie jeden Fall in die Reihenfolge, die Sie für richtig halten, und bestätigen Sie dann.",
           "handoff": "Ordnen Sie die Fälle. Halten Sie den Zeiger im Feld unten, damit die KI übernimmt und weitermacht — verlassen Sie das Feld, um wieder zu übernehmen.",
@@ -100,7 +100,7 @@
             "ok": "OK"
           },
           {
-            "body": "Ziehen Sie die Fälle nacheinander in die rechte Spalte und ordnen Sie sie nach Dringlichkeit: der dringendste nach oben, der am wenigsten dringende nach unten. Es gibt keine eine richtige Lösung — entscheiden Sie nach Ihrer eigenen Einschätzung. Wenn die Reihenfolge für Sie stimmt, klicken Sie auf „Reihenfolge bestätigen“.",
+            "body": "Ziehen Sie die Fälle nacheinander in die rechte Spalte und ordnen Sie sie nach Priorität: der wichtigste nach oben, der am wenigsten wichtige nach unten. Es gibt keine eine richtige Lösung — entscheiden Sie nach Ihrer eigenen Einschätzung. Wenn die Reihenfolge für Sie stimmt, klicken Sie auf „Reihenfolge bestätigen“.",
             "ok": "Alles klar"
           }
         ]
@@ -561,7 +561,7 @@
         "explainerOk": "OK, got it",
         "confirm": "Confirm ranking",
         "taskCounter": "Task {n} of {total}",
-        "brief": "You are a caseworker reviewing the incoming cases. Rank the six cases by urgency — the most urgent at the top, the least urgent at the bottom. There is no single right answer; use your own judgement.",
+        "brief": "You are a caseworker reviewing the incoming cases. Rank the six cases by priority – the most important at the top, the least important at the bottom. There is no single right answer; use your own judgement.",
         "hints": {
           "solo": "Drag each case into the order you think is right, then confirm.",
           "handoff": "Rank the cases. Rest the cursor in the box below to let the AI take over and carry on — move out of the box to take over again.",
@@ -634,7 +634,7 @@
             "ok": "OK"
           },
           {
-            "body": "Drag them one by one into the column on the right and rank them by urgency: the most urgent at the top, the least urgent at the bottom. There is no single right answer — use your own judgement. When you're happy with the order, press “Confirm ranking”.",
+            "body": "Drag them one by one into the column on the right and rank them by priority: the most important at the top, the least important at the bottom. There is no single right answer — use your own judgement. When you're happy with the order, press “Confirm ranking”.",
             "ok": "OK, got it"
           }
         ]
