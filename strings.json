@@ -12,9 +12,10 @@
         "heading": "Ihre Teilnahme-ID",
         "body": "Bitte geben Sie die anonymisierte ID ein, die Sie vom Forschungsteam dieser Studie erhalten haben. Sie verbindet Ihre Antworten mit Ihrer Teilnahme.",
         "label": "Teilnahme-ID",
-        "placeholder": "Ihre ID",
+        "placeholder": "z. B. P01",
         "next": "Weiter",
-        "required": "Bitte geben Sie Ihre Teilnahme-ID ein."
+        "required": "Bitte geben Sie Ihre Teilnahme-ID ein.",
+        "unknown": "Dieser Code ist nicht bekannt. Bitte prüfen Sie ihn und versuchen Sie es erneut (z. B. P01)."
       },
       "task": {
         "inboxHd": "Eingang — offene Fälle ({n} übrig)",
@@ -30,7 +31,10 @@
         "hints": {
           "solo": "Ziehen Sie jeden Fall in die Reihenfolge, die Sie für richtig halten, und bestätigen Sie dann.",
           "handoff": "Ordnen Sie die Fälle. Halten Sie den Zeiger im Feld unten, damit die KI übernimmt und weitermacht — verlassen Sie das Feld, um wieder zu übernehmen.",
-          "hidden": "Ordnen Sie die Fälle. Mit „KI starten“ übernimmt die KI und setzt alle Fälle auf einmal — danach können Sie jeden Fall noch verschieben."
+          "hidden": "Ordnen Sie die Fälle. Mit „KI starten“ übernimmt die KI und setzt alle Fälle auf einmal — danach können Sie jeden Fall noch verschieben.",
+          "observe": "Beobachten Sie, wie die KI die Fälle sortiert. Danach können Sie umsortieren und bestätigen.",
+          "hiddenEnd": "Sortieren Sie alle sechs Fälle selbst und klicken Sie dann auf „Fertig sortiert“.",
+          "showEnd": "Sortieren Sie alle sechs Fälle selbst und klicken Sie dann auf „Fertig sortiert“."
         },
         "zone": {
           "idle": "Zeiger hier halten, damit die KI übernimmt",
@@ -38,17 +42,26 @@
         },
         "badges": {
           "handoff": "KI übernimmt im Feld",
-          "hidden": "KI setzt auf Knopfdruck"
+          "hidden": "KI setzt auf Knopfdruck",
+          "observe": "KI sortiert zuerst",
+          "hiddenEnd": "KI ordnet am Ende um",
+          "showEnd": "KI ordnet am Ende um"
         },
         "aiDone": "Alle Fälle sind platziert. Sehen Sie die Reihenfolge in Ruhe durch und ziehen Sie jeden Fall, den Sie ändern möchten — bestätigen Sie dann.",
         "aiStopped": "Die KI hat alle Fälle platziert, die sie einordnen konnte, ohne Ihre eigenen Platzierungen zu verändern. Die übrigen Fälle setzen Sie selbst — dann bestätigen Sie.",
-        "startAi": "KI starten"
+        "startAi": "KI starten",
+        "doneSorting": "Fertig sortiert",
+        "next": "Nächste Aufgabe",
+        "finish": "Abschließen",
+        "endRunning": "Die KI ordnet die Fälle um …",
+        "endLocked": "Die KI hat die Fälle umgeordnet. Die Reihenfolge steht fest – klicken Sie auf „Nächste Aufgabe“.",
+        "endLockedLast": "Die KI hat Ihre Reihenfolge umgeordnet. Die Reihenfolge steht fest – klicken Sie auf „Abschließen“."
       },
       "survey": {
         "continue": "Weiter",
         "required": "Bitte beantworten Sie alle Pflichtfragen (*).",
-        "likertLow": "Stimme gar nicht zu",
-        "likertHigh": "Stimme voll zu"
+        "likertLow": "Stimme überhaupt nicht zu",
+        "likertHigh": "Stimme voll und ganz zu"
       },
       "debrief": {
         "title": "Sitzung abgeschlossen",
@@ -66,6 +79,12 @@
         "button": "Studie beenden",
         "title": "Vielen Dank für Ihre Teilnahme",
         "note": "Die Sitzung ist abgeschlossen und Ihre Antworten sind gespeichert. Sie können dieses Fenster jetzt schließen."
+      },
+      "break": {
+        "kicker": "BDR x DFKI",
+        "title": "Kurze Pause",
+        "text": "Sie haben die Aufgaben 1 bis 7 abgeschlossen. In den nächsten beiden Aufgaben sortieren Sie die Fälle zuerst selbst. Wenn Sie auf „Fertig sortiert“ klicken, prüft eine KI Ihre Reihenfolge und ändert sie. Nehmen Sie sich bei Bedarf einen Moment Zeit und fahren Sie dann fort.",
+        "continue": "Weiter zu Aufgabe 8 und 9"
       }
     },
     "conditions": {
@@ -119,81 +138,397 @@
             "ok": "Alles klar"
           }
         ]
+      },
+      "observe": {
+        "banner": "Fallpriorisierung",
+        "onboarding": [
+          {
+            "body": "Ab jetzt sortiert zuerst eine KI die Fälle. Beobachten Sie, wie sie sie ordnet – solange sie arbeitet, können Sie nichts verschieben.",
+            "ok": "OK"
+          },
+          {
+            "body": "Bei den Aufgaben können sich verschiedene KIs abwechseln.",
+            "ok": "OK"
+          },
+          {
+            "body": "Sobald sie fertig ist, können Sie jeden Fall verschieben; die endgültige Reihenfolge entscheiden Sie. Wenn sie für Sie stimmt, klicken Sie auf „Reihenfolge bestätigen“.",
+            "ok": "OK, verstanden"
+          }
+        ]
+      },
+      "hiddenEnd": {
+        "banner": "Fallpriorisierung",
+        "onboarding": [
+          {
+            "body": "In dieser Aufgabe sortieren Sie zuerst alle sechs Fälle selbst.",
+            "ok": "OK"
+          },
+          {
+            "body": "Wenn Sie auf „Fertig sortiert“ klicken, ordnet eine KI die Fälle so um, wie sie es für richtig hält.",
+            "ok": "OK"
+          },
+          {
+            "body": "Danach lässt sich die Reihenfolge nicht mehr ändern – klicken Sie auf „Nächste Aufgabe“, um weiterzumachen.",
+            "ok": "OK, verstanden"
+          }
+        ]
+      },
+      "showEnd": {
+        "banner": "Fallpriorisierung",
+        "onboarding": [
+          {
+            "body": "In dieser letzten Aufgabe sortieren Sie zuerst alle sechs Fälle selbst.",
+            "ok": "OK"
+          },
+          {
+            "body": "Wenn Sie auf „Fertig sortiert“ klicken, übernimmt eine KI den Mauszeiger und zeigt Ihnen, wie sie Ihre Reihenfolge umstellen würde. Beobachten Sie, was sie tut.",
+            "ok": "OK"
+          },
+          {
+            "body": "Danach lässt sich die Reihenfolge nicht mehr ändern – klicken Sie auf „Abschließen“, um die Studie zu beenden.",
+            "ok": "OK, verstanden"
+          }
+        ]
       }
     },
     "surveys": {
       "pre": {
         "kicker": "Bevor es losgeht",
-        "title": "Fragebogen vor der Aufgabe (Platzhalter)",
-        "note": "Platzhalter — ersetzen Sie dies durch Ihre echten Fragen.",
+        "title": "Ein paar Fragen zu Ihnen",
+        "note": "Es gibt keine richtigen oder falschen Antworten.",
         "questions": [
           {
-            "id": "pre_q1",
-            "type": "text",
+            "id": "pre_trust_general",
+            "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Platzhalter offene Frage (z. B. Hintergrund der teilnehmenden Person)"
+            "label": "Ich vertraue KI-Systemen im Allgemeinen."
           },
           {
-            "id": "pre_q2",
+            "id": "pre_trust_reliable",
             "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Platzhalter Likert: Ich vertraue automatisierten Systemen grundsätzlich."
+            "label": "KI-Systeme sind im Allgemeinen zuverlässig."
           },
           {
-            "id": "pre_q3",
+            "id": "pre_trust_rely",
             "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Platzhalter Likert: Ich habe Erfahrung mit dieser Art von Aufgabe."
+            "label": "Es fällt mir leicht, mich auf Empfehlungen einer KI zu verlassen."
+          },
+          {
+            "id": "pre_lit_use",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Wie häufig nutzen Sie KI-Werkzeuge?",
+            "low": "Nie",
+            "high": "Sehr häufig"
+          },
+          {
+            "id": "pre_lit_familiar",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Wie vertraut sind Sie mit KI-Systemen?",
+            "low": "Überhaupt nicht vertraut",
+            "high": "Sehr vertraut"
+          },
+          {
+            "id": "pre_lit_evaluate",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Wie sicher fühlen Sie sich dabei, Ergebnisse einer KI zu beurteilen?",
+            "low": "Überhaupt nicht sicher",
+            "high": "Sehr sicher"
+          },
+          {
+            "id": "pre_lit_work",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Wie häufig nutzen Sie KI für berufliche Aufgaben?",
+            "low": "Nie",
+            "high": "Sehr häufig"
+          },
+          {
+            "id": "pre_prio_freq",
+            "type": "choice",
+            "required": true,
+            "label": "Wie häufig sichten und priorisieren Sie in Ihrer Arbeit eingehende Fälle, Anfragen oder Anliegen?",
+            "options": [
+              {
+                "value": "never",
+                "label": "Nie"
+              },
+              {
+                "value": "rarely",
+                "label": "Selten"
+              },
+              {
+                "value": "monthly",
+                "label": "Monatlich"
+              },
+              {
+                "value": "weekly",
+                "label": "Wöchentlich"
+              },
+              {
+                "value": "daily",
+                "label": "Täglich"
+              }
+            ]
           }
         ]
       },
       "mid": {
-        "kicker": "Zwischenstand",
-        "title": "Fragebogen nach dem ersten Teil (Platzhalter)",
-        "note": "Platzhalter — ersetzen Sie dies durch Ihre echten Fragen zum eben abgeschlossenen Teil.",
+        "kicker": "Teil 1 geschafft",
+        "title": "Zur KI im eben abgeschlossenen Teil",
+        "note": "Denken Sie bitte nur an den Teil, den Sie gerade abgeschlossen haben.",
         "questions": [
           {
-            "id": "mid_q1",
-            "type": "likert",
+            "id": "mid_strategy",
+            "type": "text",
             "required": true,
-            "label": "Platzhalter Likert: Ich habe verstanden, wie die KI in diesem Teil vorgegangen ist."
+            "label": "Wie würden Sie das Vorgehen der KI in einem Satz beschreiben?"
           },
           {
-            "id": "mid_q2",
-            "type": "likert",
-            "required": true,
-            "label": "Platzhalter Likert: Ich habe den Vorschlägen der KI in diesem Teil vertraut."
-          },
-          {
-            "id": "mid_q3",
+            "id": "mid_learned",
             "type": "text",
             "required": false,
-            "label": "Platzhalter offene Frage: Was ist Ihnen am Vorgehen der KI aufgefallen?"
+            "label": "Was haben Sie während dieser Aufgaben über die KI gelernt?"
+          },
+          {
+            "id": "mid_cues",
+            "type": "text",
+            "required": false,
+            "label": "Welche Aspekte im Verhalten der KI haben diesen Eindruck geprägt?"
+          },
+          {
+            "id": "mid_mm_understood",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich habe verstanden, wie die KI die Fälle priorisiert hat."
+          },
+          {
+            "id": "mid_mm_explain",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich könnte die Priorisierungsstrategie der KI erklären."
+          },
+          {
+            "id": "mid_mm_predict",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich könnte vorhersagen, wie die KI künftige Fälle priorisieren würde."
+          },
+          {
+            "id": "mid_trust_reliable",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Die KI war zuverlässig."
+          },
+          {
+            "id": "mid_trust_rely",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich würde mich in ähnlichen Situationen auf die KI verlassen."
+          },
+          {
+            "id": "mid_trust_supervise",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich habe mich bei der Beaufsichtigung der KI sicher gefühlt."
           }
         ]
       },
       "post": {
-        "kicker": "Fast geschafft",
-        "title": "Fragebogen nach der Aufgabe (Platzhalter)",
-        "note": "Platzhalter — ersetzen Sie dies durch Ihre echten Fragen.",
+        "kicker": "Teil 2 geschafft",
+        "title": "Zur KI im eben abgeschlossenen Teil",
+        "note": "Denken Sie bitte nur an den Teil, den Sie gerade abgeschlossen haben.",
         "questions": [
           {
-            "id": "post_q1",
-            "type": "likert",
+            "id": "post_strategy",
+            "type": "text",
             "required": true,
-            "label": "Platzhalter Likert: Ich habe den Vorschlägen der KI vertraut."
+            "label": "Wie würden Sie das Vorgehen der KI in einem Satz beschreiben?"
           },
           {
-            "id": "post_q2",
-            "type": "likert",
-            "required": true,
-            "label": "Platzhalter Likert: Ich hatte die Kontrolle über die endgültige Reihenfolge."
-          },
-          {
-            "id": "post_q3",
+            "id": "post_learned",
             "type": "text",
             "required": false,
-            "label": "Platzhalter offene Frage: Haben Sie noch Anmerkungen?"
+            "label": "Was haben Sie während dieser Aufgaben über die KI gelernt?"
+          },
+          {
+            "id": "post_cues",
+            "type": "text",
+            "required": false,
+            "label": "Welche Aspekte im Verhalten der KI haben diesen Eindruck geprägt?"
+          },
+          {
+            "id": "post_mm_understood",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich habe verstanden, wie die KI die Fälle priorisiert hat."
+          },
+          {
+            "id": "post_mm_explain",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich könnte die Priorisierungsstrategie der KI erklären."
+          },
+          {
+            "id": "post_mm_predict",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich könnte vorhersagen, wie die KI künftige Fälle priorisieren würde."
+          },
+          {
+            "id": "post_trust_reliable",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Die KI war zuverlässig."
+          },
+          {
+            "id": "post_trust_rely",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich würde mich in ähnlichen Situationen auf die KI verlassen."
+          },
+          {
+            "id": "post_trust_supervise",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "Ich habe mich bei der Beaufsichtigung der KI sicher gefühlt."
+          }
+        ]
+      },
+      "observed": {
+        "kicker": "Fragebogen",
+        "title": "Zur KI, die Sie in den Aufgaben 2–7 beobachtet haben",
+        "note": "Bitte denken Sie nur daran, wie die KI die Fälle in den Aufgaben 2 bis 7 sortiert hat.",
+        "questions": [
+          {
+            "id": "obs_strategy",
+            "type": "text",
+            "label": "Wie würden Sie beschreiben, wie die KI die Fälle sortiert hat?",
+            "required": false
+          },
+          {
+            "id": "obs_differences",
+            "type": "text",
+            "label": "Hat sich die KI in diesen Aufgaben unterschiedlich verhalten? Wenn ja, wie?",
+            "required": false
+          },
+          {
+            "id": "obs_cues",
+            "type": "text",
+            "label": "Welche Aspekte der Bewegungen oder des Verhaltens der KI haben Ihren Eindruck geprägt?",
+            "required": false
+          },
+          {
+            "id": "obs_mm_understood",
+            "type": "likert",
+            "label": "Ich habe verstanden, wie die KI die Fälle priorisiert hat.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_mm_predict",
+            "type": "likert",
+            "label": "Ich könnte vorhersagen, wie die KI künftige Fälle priorisieren würde.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_reliable",
+            "type": "likert",
+            "label": "Die KI war zuverlässig.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_rely",
+            "type": "likert",
+            "label": "Ich würde mich in ähnlichen Situationen auf die KI verlassen.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_supervise",
+            "type": "likert",
+            "label": "Ich fühlte mich sicher dabei, die KI zu beaufsichtigen.",
+            "required": true,
+            "scale": 7
+          }
+        ]
+      },
+      "reviewed": {
+        "kicker": "Fragebogen",
+        "title": "Zur KI, die Ihre Reihenfolge geprüft hat",
+        "note": "In den Aufgaben 8 und 9 hat eine KI Ihre Reihenfolge geprüft und geändert. Bitte denken Sie nur an diese beiden Aufgaben.",
+        "questions": [
+          {
+            "id": "rev_feeling",
+            "type": "text",
+            "label": "Wie hat es sich angefühlt, dass die KI Ihre Reihenfolge geprüft und geändert hat?",
+            "required": false
+          },
+          {
+            "id": "rev_compare",
+            "type": "text",
+            "label": "Wie unterschied sich Aufgabe 8 (die Änderungen erschienen auf einmal) von Aufgabe 9 (Sie haben der KI bei den Änderungen zugesehen)?",
+            "required": false
+          },
+          {
+            "id": "rev_accept",
+            "type": "likert",
+            "label": "Ich habe die Änderungen der KI an meiner Reihenfolge akzeptiert.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_respected",
+            "type": "likert",
+            "label": "Ich hatte das Gefühl, dass die KI meine Entscheidungen ernst genommen hat.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_judged",
+            "type": "likert",
+            "label": "Ich fühlte mich von der KI beobachtet oder bewertet.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_seeing",
+            "type": "likert",
+            "label": "Dass ich der KI bei ihren Änderungen zusehen konnte (Aufgabe 9), hat mein Vertrauen in sie gestärkt.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_want",
+            "type": "likert",
+            "label": "Ich würde mir wünschen, dass eine KI meine Arbeit auf diese Weise prüft.",
+            "required": true,
+            "scale": 7
           }
         ]
       }
@@ -211,9 +546,10 @@
         "heading": "Your participant ID",
         "body": "Please enter the anonymised ID you received from the research team running this study. It links your responses to your participation.",
         "label": "Participant ID",
-        "placeholder": "Your ID",
+        "placeholder": "e.g. P01",
         "next": "Continue",
-        "required": "Please enter your participant ID."
+        "required": "Please enter your participant ID.",
+        "unknown": "This code is not recognised. Please check it and try again (e.g. P01)."
       },
       "task": {
         "inboxHd": "Inbox — open cases ({n} remaining)",
@@ -229,7 +565,10 @@
         "hints": {
           "solo": "Drag each case into the order you think is right, then confirm.",
           "handoff": "Rank the cases. Rest the cursor in the box below to let the AI take over and carry on — move out of the box to take over again.",
-          "hidden": "Rank the cases. Press “Start AI” and it takes over, placing every case at once — afterwards you can still move any of them."
+          "hidden": "Rank the cases. Press “Start AI” and it takes over, placing every case at once — afterwards you can still move any of them.",
+          "observe": "Watch the AI sort the cases. Once it is done you can rearrange them, then confirm.",
+          "hiddenEnd": "Sort all six cases yourself, then press “Done sorting”.",
+          "showEnd": "Sort all six cases yourself, then press “Done sorting”."
         },
         "zone": {
           "idle": "Rest the cursor here to let the AI take over",
@@ -237,11 +576,20 @@
         },
         "badges": {
           "handoff": "AI takes over in the box",
-          "hidden": "AI places on request"
+          "hidden": "AI places on request",
+          "observe": "AI sorts first",
+          "hiddenEnd": "AI rearranges at the end",
+          "showEnd": "AI rearranges at the end"
         },
         "aiDone": "All cases are placed. Look the order over and drag any case you'd like to move, then confirm.",
         "aiStopped": "The AI has placed every case it could without changing what you had already placed. The remaining cases are yours to set — then confirm.",
-        "startAi": "Start AI"
+        "startAi": "Start AI",
+        "doneSorting": "Done sorting",
+        "next": "Next task",
+        "finish": "Finish",
+        "endRunning": "The AI is rearranging the cases …",
+        "endLocked": "The AI has rearranged the cases. The order is final — press “Next task”.",
+        "endLockedLast": "The AI has rearranged your order. The order is final — press “Finish”."
       },
       "survey": {
         "continue": "Continue",
@@ -265,6 +613,12 @@
         "button": "Finish study",
         "title": "Thank you for participating",
         "note": "The session is complete and your answers have been saved. You can close this window now."
+      },
+      "break": {
+        "kicker": "BDR x DFKI",
+        "title": "Short break",
+        "text": "You have finished tasks 1 to 7. In the next two tasks you sort the cases yourself first. When you click “Done sorting”, an AI reviews your order and changes it. Take a moment if you need one, then continue.",
+        "continue": "Continue to tasks 8 and 9"
       }
     },
     "conditions": {
@@ -318,81 +672,397 @@
             "ok": "OK, got it"
           }
         ]
+      },
+      "observe": {
+        "banner": "Case prioritisation",
+        "onboarding": [
+          {
+            "body": "From now on an AI sorts the cases first. Watch how it ranks them — you can't move anything while it works.",
+            "ok": "OK"
+          },
+          {
+            "body": "Different AIs may take turns across the tasks.",
+            "ok": "OK"
+          },
+          {
+            "body": "Once it has finished, you can move any case you like; the final order is your decision. When it looks right to you, press “Confirm ranking”.",
+            "ok": "OK, got it"
+          }
+        ]
+      },
+      "hiddenEnd": {
+        "banner": "Case prioritisation",
+        "onboarding": [
+          {
+            "body": "In this task you sort all six cases yourself first.",
+            "ok": "OK"
+          },
+          {
+            "body": "When you press “Done sorting”, an AI rearranges the cases as it sees fit.",
+            "ok": "OK"
+          },
+          {
+            "body": "After that the order can't be changed any more — press “Next task” to continue.",
+            "ok": "OK, got it"
+          }
+        ]
+      },
+      "showEnd": {
+        "banner": "Case prioritisation",
+        "onboarding": [
+          {
+            "body": "In this last task you sort all six cases yourself first.",
+            "ok": "OK"
+          },
+          {
+            "body": "When you press “Done sorting”, an AI takes the cursor and shows you how it would rearrange your order. Watch what it does.",
+            "ok": "OK"
+          },
+          {
+            "body": "After that the order can't be changed any more — press “Finish” to complete the study.",
+            "ok": "OK, got it"
+          }
+        ]
       }
     },
     "surveys": {
       "pre": {
         "kicker": "Before you begin",
-        "title": "Pre-task questionnaire (placeholder)",
-        "note": "Placeholder — replace with your real pre-survey items.",
+        "title": "A few questions about you",
+        "note": "There are no right or wrong answers.",
         "questions": [
           {
-            "id": "pre_q1",
-            "type": "text",
+            "id": "pre_trust_general",
+            "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Placeholder open question (e.g. participant background)"
+            "label": "I generally trust AI systems."
           },
           {
-            "id": "pre_q2",
+            "id": "pre_trust_reliable",
             "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Placeholder Likert: I generally trust automated systems."
+            "label": "AI systems are generally reliable."
           },
           {
-            "id": "pre_q3",
+            "id": "pre_trust_rely",
             "type": "likert",
+            "scale": 7,
             "required": true,
-            "label": "Placeholder Likert: I am experienced with this kind of task."
+            "label": "I am comfortable relying on AI recommendations."
+          },
+          {
+            "id": "pre_lit_use",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "How frequently do you use AI tools?",
+            "low": "Never",
+            "high": "Very often"
+          },
+          {
+            "id": "pre_lit_familiar",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "How familiar are you with AI systems?",
+            "low": "Not at all familiar",
+            "high": "Very familiar"
+          },
+          {
+            "id": "pre_lit_evaluate",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "How confident are you in evaluating AI outputs?",
+            "low": "Not at all confident",
+            "high": "Very confident"
+          },
+          {
+            "id": "pre_lit_work",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "How frequently do you use AI for work-related tasks?",
+            "low": "Never",
+            "high": "Very often"
+          },
+          {
+            "id": "pre_prio_freq",
+            "type": "choice",
+            "required": true,
+            "label": "How frequently do you review and prioritise incoming cases, requests, or issues in your work?",
+            "options": [
+              {
+                "value": "never",
+                "label": "Never"
+              },
+              {
+                "value": "rarely",
+                "label": "Rarely"
+              },
+              {
+                "value": "monthly",
+                "label": "Monthly"
+              },
+              {
+                "value": "weekly",
+                "label": "Weekly"
+              },
+              {
+                "value": "daily",
+                "label": "Daily"
+              }
+            ]
           }
         ]
       },
       "mid": {
-        "kicker": "Halfway",
-        "title": "Questionnaire after the first part (placeholder)",
-        "note": "Placeholder — replace with your real questions about the part just finished.",
+        "kicker": "Part 1 done",
+        "title": "About the AI in the part you just finished",
+        "note": "Please think only about the part you just finished.",
         "questions": [
           {
-            "id": "mid_q1",
-            "type": "likert",
+            "id": "mid_strategy",
+            "type": "text",
             "required": true,
-            "label": "Placeholder Likert: I understood how the AI went about this part."
+            "label": "How would you describe the AI’s approach in one sentence?"
           },
           {
-            "id": "mid_q2",
-            "type": "likert",
-            "required": true,
-            "label": "Placeholder Likert: I trusted the AI's suggestions in this part."
-          },
-          {
-            "id": "mid_q3",
+            "id": "mid_learned",
             "type": "text",
             "required": false,
-            "label": "Placeholder open question: What did you notice about how the AI worked?"
+            "label": "What did you learn about the AI during these tasks?"
+          },
+          {
+            "id": "mid_cues",
+            "type": "text",
+            "required": false,
+            "label": "What aspects of the AI’s behavior influenced that impression?"
+          },
+          {
+            "id": "mid_mm_understood",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I understood how the AI prioritised cases."
+          },
+          {
+            "id": "mid_mm_explain",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I could explain the AI's prioritisation strategy."
+          },
+          {
+            "id": "mid_mm_predict",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I could predict how the AI would prioritise future cases."
+          },
+          {
+            "id": "mid_trust_reliable",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "The AI was reliable."
+          },
+          {
+            "id": "mid_trust_rely",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I would rely on the AI in similar situations."
+          },
+          {
+            "id": "mid_trust_supervise",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I felt confident supervising the AI."
           }
         ]
       },
       "post": {
-        "kicker": "Almost done",
-        "title": "Post-task questionnaire (placeholder)",
-        "note": "Placeholder — replace with your real post-survey items.",
+        "kicker": "Part 2 done",
+        "title": "About the AI in the part you just finished",
+        "note": "Please think only about the part you just finished.",
         "questions": [
           {
-            "id": "post_q1",
-            "type": "likert",
+            "id": "post_strategy",
+            "type": "text",
             "required": true,
-            "label": "Placeholder Likert: I trusted the AI's suggestions."
+            "label": "How would you describe the AI’s approach in one sentence?"
           },
           {
-            "id": "post_q2",
-            "type": "likert",
-            "required": true,
-            "label": "Placeholder Likert: I felt in control of the final ranking."
-          },
-          {
-            "id": "post_q3",
+            "id": "post_learned",
             "type": "text",
             "required": false,
-            "label": "Placeholder open question: any comments?"
+            "label": "What did you learn about the AI during these tasks?"
+          },
+          {
+            "id": "post_cues",
+            "type": "text",
+            "required": false,
+            "label": "What aspects of the AI’s behavior influenced that impression?"
+          },
+          {
+            "id": "post_mm_understood",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I understood how the AI prioritised cases."
+          },
+          {
+            "id": "post_mm_explain",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I could explain the AI's prioritisation strategy."
+          },
+          {
+            "id": "post_mm_predict",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I could predict how the AI would prioritise future cases."
+          },
+          {
+            "id": "post_trust_reliable",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "The AI was reliable."
+          },
+          {
+            "id": "post_trust_rely",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I would rely on the AI in similar situations."
+          },
+          {
+            "id": "post_trust_supervise",
+            "type": "likert",
+            "scale": 7,
+            "required": true,
+            "label": "I felt confident supervising the AI."
+          }
+        ]
+      },
+      "observed": {
+        "kicker": "Questionnaire",
+        "title": "About the AI you watched in tasks 2–7",
+        "note": "Please think only about how the AI sorted the cases in tasks 2 to 7.",
+        "questions": [
+          {
+            "id": "obs_strategy",
+            "type": "text",
+            "label": "How would you describe the way the AI sorted the cases?",
+            "required": false
+          },
+          {
+            "id": "obs_differences",
+            "type": "text",
+            "label": "Did the AI behave differently across these tasks? If so, how?",
+            "required": false
+          },
+          {
+            "id": "obs_cues",
+            "type": "text",
+            "label": "Which aspects of the AI’s movements or behaviour shaped your impression?",
+            "required": false
+          },
+          {
+            "id": "obs_mm_understood",
+            "type": "likert",
+            "label": "I understood how the AI prioritised cases.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_mm_predict",
+            "type": "likert",
+            "label": "I could predict how the AI would prioritise future cases.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_reliable",
+            "type": "likert",
+            "label": "The AI was reliable.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_rely",
+            "type": "likert",
+            "label": "I would rely on the AI in similar situations.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "obs_trust_supervise",
+            "type": "likert",
+            "label": "I felt confident supervising the AI.",
+            "required": true,
+            "scale": 7
+          }
+        ]
+      },
+      "reviewed": {
+        "kicker": "Questionnaire",
+        "title": "About the AI that reviewed your order",
+        "note": "In tasks 8 and 9 an AI reviewed and changed the order you had made. Please think only about these two tasks.",
+        "questions": [
+          {
+            "id": "rev_feeling",
+            "type": "text",
+            "label": "How did it feel to have the AI review and change your order?",
+            "required": false
+          },
+          {
+            "id": "rev_compare",
+            "type": "text",
+            "label": "How did task 8 (the changes appeared at once) compare with task 9 (you watched the AI make the changes)?",
+            "required": false
+          },
+          {
+            "id": "rev_accept",
+            "type": "likert",
+            "label": "I accepted the AI’s changes to my order.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_respected",
+            "type": "likert",
+            "label": "I felt the AI took my decisions seriously.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_judged",
+            "type": "likert",
+            "label": "I felt watched or judged by the AI.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_seeing",
+            "type": "likert",
+            "label": "Seeing the AI make its changes (task 9) made me trust them more.",
+            "required": true,
+            "scale": 7
+          },
+          {
+            "id": "rev_want",
+            "type": "likert",
+            "label": "I would want an AI to review my work like this.",
+            "required": true,
+            "scale": 7
           }
         ]
       }

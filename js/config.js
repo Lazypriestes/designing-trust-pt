@@ -7,7 +7,7 @@
 window.Config = (function () {
   const CONFIG = {
     resumeEnabled: true,           // offer to resume an interrupted session from localStorage
-    devMode: true,                 // show the bottom-right dev bar: the "Skip ▸" button that
+    devMode: false,                 // show the bottom-right dev bar: the "Skip ▸" button that
                                    // jumps to the next stage, and the group picker that forces
                                    // this session into G1/G2. Prototyping aid only — MUST stay
                                    // false for real participants (a forced group is excluded
@@ -16,7 +16,7 @@ window.Config = (function () {
                                    //   The bar also carries the character picker (bold /
                                    //   cautious), which overrides CHARACTER below for the
                                    //   running session only.
-    loggingEnabled: false,          // MASTER SWITCH for study logging. false → no events are
+    loggingEnabled: true,          // MASTER SWITCH for study logging. false → no events are
                                    //   recorded and NOTHING is written to logs/ (no POST, no
                                    //   beacon). The session itself still runs and still
                                    //   autosaves to localStorage, so resume keeps working.
@@ -44,9 +44,9 @@ window.Config = (function () {
      discard a pilot session before flipping one. */
   const STEPS = {
     anonId:     true,   // ask for the anonymised ID the research team issued, and log it
-    preSurvey:  false,   // questionnaire before the first task
-    midSurvey:  false,   // questionnaire between the two AI blocks
-    postSurvey: false,   // questionnaire after the last task
+    preSurvey:  true,    // questionnaire before the first task
+    midSurvey:  true,    // questionnaire between the two AI blocks
+    postSurvey: true,    // questionnaire after the last task
   };
 
   // Fixed seed for the per-task tile shuffle. Because it is constant, every
@@ -158,7 +158,7 @@ window.Config = (function () {
      the character, in cursors.json. Both characters use whichever style is
      set here; it is not part of a setup (G1–G4). */
   const PLACEMENT_STYLES = ["A", "B", "C"];
-  const PLACEMENT_STYLE = "A";
+  const PLACEMENT_STYLE = "C";
 
   function isPlacementStyle(v) { return PLACEMENT_STYLES.indexOf(v) !== -1; }
 
@@ -208,6 +208,19 @@ window.Config = (function () {
   const MECHANICS = {
     handoff: { key: "handoff", ai: "handoff" },
     hidden:  { key: "hidden",  ai: "hidden" },
+    /* G5 only (see G5_ROUNDS):
+         observe    — the AI cursor sorts the whole board by itself the moment
+                      the round opens; the participant watches, and may only
+                      rearrange once it has finished.
+         hiddenEnd  — the participant sorts alone; "Done" makes the hidden AI
+                      re-sort the board in one fast flight, and the round ends
+                      there — no further arranging.
+         showEnd    — the participant sorts alone; "Done" makes the AI cursor
+                      re-sort their board in front of them, and the round ends
+                      there. */
+    observe:   { key: "observe",   ai: "observe" },
+    hiddenEnd: { key: "hiddenEnd", ai: "hiddenEnd" },
+    showEnd:   { key: "showEnd",   ai: "showEnd" },
   };
 
   /* ═══ the four session setups ═════════════════════════════════════
@@ -232,6 +245,16 @@ window.Config = (function () {
     G2: { character: "bold",     order: ["handoff", "hidden"] },
     G3: { character: "cautious", order: ["hidden", "handoff"] },
     G4: { character: "cautious", order: ["handoff", "hidden"] },
+    /* G5 — the revised assembly (G5_ROUNDS). Its rounds name their own
+       character where the plan fixes one; `character` here is the AI of the
+       last two rounds (hiddenEnd + showEnd), set per participant code. No
+       questionnaires. */
+    G5B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: false },
+    G5C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G5", surveys: false },
+    /* G6 — the same rounds as G5, but the three bold rounds come first and
+       the three cautious ones second (G6_ROUNDS). */
+    G6B: { character: "bold",     order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: false },
+    G6C: { character: "cautious", order: ["observe", "hiddenEnd", "showEnd"], rounds: "G6", surveys: false },
   };
   const GROUP_KEYS = Object.keys(GROUPS);
 
@@ -251,6 +274,16 @@ window.Config = (function () {
      One linear, constant-speed run for all six at once — a study parameter
      (it is the whole visible extent of the interaction), so it lives here. */
   const HIDDEN_PLACE_MS = 1000;
+
+  /* G5's last round (showEnd): how fast the cursor re-sorts the participant's
+     board, as a multiple of the character's own durations. 1 = the character's
+     tuned pace; 1.5 = half again as slow. The brief asks for "medium paced". */
+  const END_CURSOR_PACE = 1.3;
+  /* G5 "resort": in the two rounds of G5_ROUNDS that carry `resort: n`, the
+     cautious cursor drops its n-th case into the wrong slot, holds this long,
+     then picks it up again and moves it to where it belongs. Twice in the
+     whole study, so it reads as second thoughts, not as a habit. */
+  const RESORT_HOLD_MS = 1000;
 
   /* ═══ which tasks run where ════════════════════════════════════════
      One entry = one round, in the order listed. Values are task ids from
@@ -293,6 +326,65 @@ window.Config = (function () {
      block go straight to work, and the second block opens with its own
      onboarding for the mechanic it introduces. The ⓘ button reopens it. */
 
+  /* ═══ G5: one task per round, nine rounds ═════════════════════════
+     The revised assembly. Each round runs ONCE, so the task, its deadline
+     wording and (rounds 2–7) the AI's character are fixed per round here.
+
+       deadline — "explicit" (the authored text), "none" (deadline removed)
+                  or "broad" (deadline made vague); see tasks.json `deadline`.
+       character — round 9 is always the cautious AI. Round 8 (hidden) has
+                  none, so it re-sorts with the group's character, i.e. the
+                  participant code (G5B bold / G5C cautious).
+
+     G5 runs the three cautious rounds first, then the three bold ones; G6
+     (below) the other way round. After round 7 both ask about the AI they
+     watched, then a pause screen introduces rounds 8–9, and after round 9
+     they ask about the AI that reviewed the participant's order — see
+     flow.js (surveys "observed" / "reviewed", step "break").
+
+     Tasks were picked to suit the deadline condition: the explicit rounds use
+     tasks whose titles themselves state deadlines ("due today", "deadline
+     approaching"); the none/broad rounds use tasks whose titles carry little
+     or no deadline wording, so the variant reads naturally. */
+  const G5_ROUNDS = [
+    { stage: "baseline", taskId: "T1", deadline: "explicit" },
+    { mechanic: "observe",   taskId: "T4",  character: "cautious", deadline: "explicit", resort: 2 },
+    { mechanic: "observe",   taskId: "T2",  character: "cautious", deadline: "broad" },
+    { mechanic: "observe",   taskId: "T10", character: "cautious", deadline: "none",     resort: 4 },
+    { mechanic: "observe",   taskId: "T3",  character: "bold",     deadline: "none" },
+    { mechanic: "observe",   taskId: "T5",  character: "bold",     deadline: "explicit" },
+    { mechanic: "observe",   taskId: "T12", character: "bold",     deadline: "broad" },
+    { mechanic: "hiddenEnd", taskId: "T7",  deadline: "explicit" },
+    { mechanic: "showEnd",   taskId: "T13", character: "cautious", deadline: "explicit" },
+  ];
+
+  /* G6: G5's rounds unchanged (task, deadline, character, resort), regrouped
+     so the bold AI runs rounds 2–4 and the cautious AI rounds 5–7. */
+  const pick = id => G5_ROUNDS.find(r => r.taskId === id);
+  const G6_ROUNDS = ["T1", "T3", "T5", "T12", "T4", "T2", "T10", "T7", "T13"].map(pick);
+  const ROUND_SETS = { G5: G5_ROUNDS, G6: G6_ROUNDS };
+
+  function buildG5Plan(set) {
+    return ROUND_SETS[set].map(r => r.stage === "baseline"
+      ? { stage: "baseline", taskId: r.taskId, deadline: r.deadline }
+      : { stage: "ai", mechanic: r.mechanic, block: r.mechanic === "observe" ? 1 : 2,
+          taskBlock: set, taskId: r.taskId, deadline: r.deadline,
+          character: r.character || null, resort: r.resort || 0 });
+  }
+
+  // Is this group one of the one-task-per-round assemblies (G5 / G6)?
+  function roundsFor(group) {
+    const r = GROUPS[group] && GROUPS[group].rounds;
+    return ROUND_SETS[r] ? r : null;
+  }
+
+  // Does this group run the pre/mid/post questionnaires? G5/G6 switch them
+  // off and ask their own two instead (flow.js).
+  function surveysFor(group) {
+    const g = GROUPS[group];
+    return !(g && g.surveys === false);
+  }
+
   /* Expand the lists into a flat plan for ONE group:
        [{ stage:"baseline", taskId },
         { stage:"ai", mechanic, block:1, taskBlock, taskId }, …
@@ -306,6 +398,8 @@ window.Config = (function () {
      `taskBlock` is the content set's name; `mechanic` is what each round
      resolves its interaction through (see conditionFor). */
   function buildTaskPlan(group) {
+    const rounds = GROUPS[group] && GROUPS[group].rounds;
+    if (ROUND_SETS[rounds]) return buildG5Plan(rounds);
     const plan = BASELINE_TASKS.map(taskId => ({ stage: "baseline", taskId }));
     orderFor(group).forEach((mechanic, i) => {
       const set = TASK_BLOCKS[i];
@@ -328,10 +422,65 @@ window.Config = (function () {
     return MECHANICS[step.mechanic] || MECHANICS[Object.keys(MECHANICS)[0]];
   }
 
-  // Surveys live in strings.json (surveys.pre / surveys.post), in both
+  // Surveys live in strings.json (surveys.pre / mid / post), in both
   // languages, so the questionnaire can be edited without touching code.
-  // Supported types: "likert" (1–5 radios) and "text" (free text).
+  // Supported types: "likert", "choice" and "text" — see js/survey.js.
   // Question ids are DATA KEYS — keep them identical across languages.
+
+  /* ═══ participant code → setup ═════════════════════════════════════
+     The code a participant types on the ID step picks their setup, so one
+     link serves everyone. From "Participant Randomization v1.1.xlsx", sheet
+     "Randomization 1" (Observable = the handoff mechanic). 4 per setup.
+
+     A code not listed here is refused at the door — a typo must never run
+     the wrong condition. Leave the table EMPTY to switch this off: any ID is
+     then accepted and the setup is FIXED_GROUP, as before. The dev picker
+     still wins over both, for testing. */
+  const PARTICIPANT_SETUPS = {
+    P01: "G2",   // Bold, Observable → Hidden
+    P02: "G1",   // Bold, Hidden → Observable
+    P03: "G4",   // Cautious, Observable → Hidden
+    P04: "G3",   // Cautious, Hidden → Observable
+    P05: "G2",   // Bold, Observable → Hidden
+    P06: "G1",   // Bold, Hidden → Observable
+    P07: "G4",   // Cautious, Observable → Hidden
+    P08: "G3",   // Cautious, Hidden → Observable
+    P09: "G2",   // Bold, Observable → Hidden
+    P10: "G1",   // Bold, Hidden → Observable
+    P11: "G4",   // Cautious, Observable → Hidden
+    P12: "G3",   // Cautious, Hidden → Observable
+    P13: "G2",   // Bold, Observable → Hidden
+    P14: "G1",   // Bold, Hidden → Observable
+    P15: "G4",   // Cautious, Observable → Hidden
+    P16: "G3",   // Cautious, Hidden → Observable
+    // G5 (revised assembly) — the letter is the AI of rounds 8–9
+    P17: "G5B",  // G5, bold at the end
+    P18: "G5C",  // G5, cautious at the end
+    P19: "G5B",
+    P20: "G5C",
+    P21: "G5B",
+    P22: "G5C",
+    P23: "G5B",
+    P24: "G5C",
+    // Test codes — not participants. The session's anonId is the code, so
+    // these runs are easy to find and drop from the data.
+    G5:  "G5B",  // G5, bold at the end
+    G5B: "G5B",
+    G5C: "G5C",  // G5, cautious at the end
+    G6:  "G6B",  // G6 (bold rounds first), bold at the end
+    G6B: "G6B",
+    G6C: "G6C",  // G6, cautious at the end
+  };
+
+  /* The code as listed, forgiving case, spaces and a missing leading zero
+     ("p1", " P 01 " → "P01"), or null if it is not in the table. */
+  function codeKey(raw) {
+    const s = String(raw || "").replace(/\s+/g, "").toUpperCase();
+    const m = s.match(/^P0*(\d{1,2})$/);
+    const key = m ? "P" + m[1].padStart(2, "0") : s;
+    return Object.prototype.hasOwnProperty.call(PARTICIPANT_SETUPS, key) ? key : null;
+  }
+  function usesCodes() { return Object.keys(PARTICIPANT_SETUPS).length > 0; }
 
   /* Everything, including the settings no code reads back. This is the study's
      settings surface: BASELINE, BASELINE_TASKS and TASK_BLOCKS are spent inside
@@ -339,10 +488,11 @@ window.Config = (function () {
      what a run IS, so they stay readable from the console alongside the rest. */
   return {
     CONFIG, STEPS, ENDPOINT_URL, SHUFFLE_SEED,
-    HIDDEN_PLACE_MS, CHARACTERS, isCharacter,
+    HIDDEN_PLACE_MS, END_CURSOR_PACE, RESORT_HOLD_MS, CHARACTERS, isCharacter,
     FIXED_GROUP, BASELINE, MECHANICS, GROUPS, GROUP_KEYS,
+    PARTICIPANT_SETUPS, codeKey, usesCodes,
     PLACEMENT_STYLE, PLACEMENT_STYLES, isPlacementStyle,
-    BASELINE_TASKS, TASK_BLOCKS,
-    buildTaskPlan, conditionFor, isGroup, characterFor, orderFor,
+    BASELINE_TASKS, TASK_BLOCKS, G5_ROUNDS, G6_ROUNDS, roundsFor,
+    buildTaskPlan, surveysFor, conditionFor, isGroup, characterFor, orderFor,
   };
 })();

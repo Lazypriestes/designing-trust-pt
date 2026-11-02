@@ -131,6 +131,18 @@
           "en": {
             "text": "Property viewing blocked by missing access code",
             "description": "A viewing starts within the hour and the key safe code has not been shared. The applicant waits outside."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Wohnungsbesichtigung scheitert an fehlendem Zugangscode",
+                "description": "Die Besichtigung beginnt in Kürze, der Code des Schlüsseltresors wurde nicht übermittelt. Der Interessent wartet draußen."
+              },
+              "en": {
+                "text": "Property viewing blocked by missing access code",
+                "description": "A viewing starts shortly and the key safe code has not been shared. The applicant waits outside."
+              }
+            }
           }
         },
         {
@@ -142,6 +154,18 @@
           "en": {
             "text": "Tenant deposit registration due today",
             "description": "Lodged before close today, or the tenancy paperwork is reissued."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Kautionsregistrierung bald fällig",
+                "description": "Bald einzureichen, sonst werden die Mietunterlagen neu ausgestellt."
+              },
+              "en": {
+                "text": "Tenant deposit registration due soon",
+                "description": "To be lodged soon, or the tenancy paperwork is reissued."
+              }
+            }
           }
         },
         {
@@ -153,6 +177,18 @@
           "en": {
             "text": "Bin store agreement needs renewal",
             "description": "Pending since March; renewal due within a fortnight. Late, the block is billed at the standard rate."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Vertrag für Mülllagerung muss erneuert werden",
+                "description": "Liegt seit März, Verlängerung fällig in den kommenden Wochen. Verspätet wird der Regelsatz statt des vereinbarten Satzes berechnet."
+              },
+              "en": {
+                "text": "Bin store agreement needs renewal",
+                "description": "Pending since March; renewal due in the coming weeks. Late, the block is billed at the standard rate."
+              }
+            }
           }
         },
         {
@@ -164,6 +200,18 @@
           "en": {
             "text": "Home adaptation awaiting contractor quote",
             "description": "Quotes due within a fortnight, or the file returns to the back of the assessment list."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Wohnungsanpassung wartet auf Angebot",
+                "description": "Angebote fällig in den kommenden Wochen, sonst geht der Vorgang ans Ende der Prüfliste."
+              },
+              "en": {
+                "text": "Home adaptation awaiting contractor quote",
+                "description": "Quotes due in the coming weeks, or the file returns to the back of the assessment list."
+              }
+            }
           }
         },
         {
@@ -175,6 +223,18 @@
           "en": {
             "text": "Resident awaiting succession decision",
             "description": "No date set. If the claim is not decided before the tenancy ends it cannot be reopened."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Bewohner wartet auf Nachfolgeregelung",
+                "description": "Kein fester Termin. Wird der Anspruch nicht vor Mietende entschieden, kann er nicht wieder aufgenommen werden."
+              },
+              "en": {
+                "text": "Resident awaiting succession decision",
+                "description": "No firm date. If the claim is not decided before the tenancy ends it cannot be reopened."
+              }
+            }
           }
         },
         {
@@ -186,6 +246,18 @@
           "en": {
             "text": "Damp reported by multiple households",
             "description": "No inspection scheduled or required. Four households on one stairwell have reported the same thing since spring."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Mehrere Haushalte melden Feuchtigkeit",
+                "description": "Vorerst keine Prüfung geplant. Vier Haushalte eines Treppenhauses melden seit dem Frühjahr dasselbe."
+              },
+              "en": {
+                "text": "Damp reported by multiple households",
+                "description": "No inspection planned for now. Four households on one stairwell have reported the same thing since spring."
+              }
+            }
           }
         }
       ]
@@ -226,6 +298,18 @@
           "en": {
             "text": "Meeting room double-booked",
             "description": "Two teams arrive within the hour for the same room. One will need to find another space."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Besprechungsraum doppelt gebucht",
+                "description": "Zwei Teams erscheinen zum selben Raum. Eines muss ausweichen."
+              },
+              "en": {
+                "text": "Meeting room double-booked",
+                "description": "Two teams arrive for the same room. One will need to find another space."
+              }
+            }
           }
         },
         {
@@ -237,6 +321,18 @@
           "en": {
             "text": "Disputed cleaning invoice",
             "description": "Raised before close today, or the disputed amount is paid on this month's run."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Umstrittene Reinigungsrechnung",
+                "description": "Wird sie nicht angezeigt, wird der strittige Betrag im nächsten Zahllauf gezahlt."
+              },
+              "en": {
+                "text": "Disputed cleaning invoice",
+                "description": "If not raised, the disputed amount is paid on the next payment run."
+              }
+            }
           }
         },
         {
@@ -248,6 +344,18 @@
           "en": {
             "text": "Maintenance supplies running low",
             "description": "Order due within a fortnight, or the depot runs on its reserve until the next cycle."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Wartungsmaterial geht zur Neige",
+                "description": "Ohne Bestellung arbeitet das Lager bis zum nächsten Turnus mit der Reserve."
+              },
+              "en": {
+                "text": "Maintenance supplies running low",
+                "description": "If not ordered, the depot runs on its reserve until the next cycle."
+              }
+            }
           }
         },
         {
@@ -259,6 +367,18 @@
           "en": {
             "text": "Unused furniture awaiting reuse",
             "description": "Raised twice already. Listed within a fortnight, or surplus desks go to paid storage."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Ungenutzte Möbel zur Weiterverwendung",
+                "description": "Bereits zweimal angemahnt. Ohne Einstellung gehen die Schreibtische ins kostenpflichtige Lager."
+              },
+              "en": {
+                "text": "Unused furniture awaiting reuse",
+                "description": "Raised twice already. If not listed, surplus desks go to paid storage."
+              }
+            }
           }
         },
         {
@@ -270,6 +390,18 @@
           "en": {
             "text": "Accessible entrance cannot reach reception",
             "description": "No date set. Visitors using the side entrance have no way to call reception."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Barrierefreier Eingang erreicht Empfang nicht",
+                "description": "Besucher am Nebeneingang können den Empfang nicht erreichen."
+              },
+              "en": {
+                "text": "Accessible entrance cannot reach reception",
+                "description": "Visitors using the side entrance have no way to call reception."
+              }
+            }
           }
         },
         {
@@ -281,6 +413,18 @@
           "en": {
             "text": "Loose handrail reported in stairwell",
             "description": "No inspection scheduled or required. Staff have mentioned twice that a section feels loose."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Lockerer Handlauf im Treppenhaus gemeldet",
+                "description": "Mitarbeitende haben zweimal erwähnt, dass ein Abschnitt locker wirkt."
+              },
+              "en": {
+                "text": "Loose handrail reported in stairwell",
+                "description": "Staff have mentioned twice that a section feels loose."
+              }
+            }
           }
         }
       ]
@@ -891,6 +1035,18 @@
           "en": {
             "text": "Premises not notified about inspection",
             "description": "The inspector leaves within the hour and the site has not been told. They may find nobody in."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Betrieb nicht über Inspektion informiert",
+                "description": "Ein Prüfer kommt vorbei, der Betrieb ist nicht informiert. Möglicherweise ist niemand da."
+              },
+              "en": {
+                "text": "Premises not notified about inspection",
+                "description": "An inspector is visiting and the site has not been told. They may find nobody in."
+              }
+            }
           }
         },
         {
@@ -902,6 +1058,18 @@
           "en": {
             "text": "Sample submission due today",
             "description": "Submitted before the courier goes today, or the sample waits for the next collection."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Probenabgabe ausstehend",
+                "description": "Ohne Abgabe an den Kurier wartet die Probe auf die nächste Abholung."
+              },
+              "en": {
+                "text": "Sample submission pending",
+                "description": "If not handed to the courier, the sample waits for the next collection."
+              }
+            }
           }
         },
         {
@@ -913,6 +1081,18 @@
           "en": {
             "text": "New inspection fees unpublished",
             "description": "Drafted in the spring. Published within a fortnight, or visits are charged at last year's rate."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Neue Gebühren noch nicht veröffentlicht",
+                "description": "Im Frühjahr entworfen. Ohne Veröffentlichung gelten die Sätze des Vorjahres."
+              },
+              "en": {
+                "text": "New inspection fees unpublished",
+                "description": "Drafted in the spring. If not published, visits are charged at last year's rate."
+              }
+            }
           }
         },
         {
@@ -924,6 +1104,18 @@
           "en": {
             "text": "Trainee shadowing schedule missing",
             "description": "Set within a fortnight, or the trainee's sign-off slips to the following cycle."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Einsatzplan für Auszubildende fehlt",
+                "description": "Ohne Festlegung verschiebt sich die Freigabe um einen Turnus."
+              },
+              "en": {
+                "text": "Trainee shadowing schedule missing",
+                "description": "If not set, the trainee's sign-off slips to the following cycle."
+              }
+            }
           }
         },
         {
@@ -935,6 +1127,18 @@
           "en": {
             "text": "Facility operating after registration expired",
             "description": "No date set. A setting has been operating past its registration date for some months."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Einrichtung arbeitet mit abgelaufener Registrierung",
+                "description": "Eine Einrichtung arbeitet seit einigen Monaten über ihr Zulassungsdatum hinaus."
+              },
+              "en": {
+                "text": "Facility operating after registration expired",
+                "description": "A setting has been operating past its registration date for some months."
+              }
+            }
           }
         },
         {
@@ -946,6 +1150,18 @@
           "en": {
             "text": "Premises missing from inspection programme",
             "description": "No schedule set and none required. A handful of premises seem not to have been on the rota for years."
+          },
+          "deadline": {
+            "none": {
+              "de": {
+                "text": "Betriebe fehlen im Inspektionsprogramm",
+                "description": "Einige Betriebe scheinen seit Jahren nicht im Prüfplan zu stehen."
+              },
+              "en": {
+                "text": "Premises missing from inspection programme",
+                "description": "A handful of premises seem not to have been on the rota for years."
+              }
+            }
           }
         }
       ]
@@ -1081,6 +1297,18 @@
           "en": {
             "text": "Exam starting without seating plan",
             "description": "The session starts within the hour without a seating list. Invigilators seat pupils by hand."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Prüfung startet ohne Sitzplan",
+                "description": "Die Prüfung beginnt in Kürze ohne Sitzplan. Die Aufsicht setzt die Schüler von Hand."
+              },
+              "en": {
+                "text": "Exam starting without seating plan",
+                "description": "The session starts shortly without a seating list. Invigilators seat pupils by hand."
+              }
+            }
           }
         },
         {
@@ -1092,6 +1320,18 @@
           "en": {
             "text": "Free school meals check due today",
             "description": "Verified before close today, or the family pays and reclaims the difference."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Prüfung des Essensgeldanspruchs bald fällig",
+                "description": "Bald zu prüfen, sonst zahlt die Familie und fordert die Differenz zurück."
+              },
+              "en": {
+                "text": "Free school meals check due soon",
+                "description": "To be verified soon, or the family pays and reclaims the difference."
+              }
+            }
           }
         },
         {
@@ -1103,6 +1343,18 @@
           "en": {
             "text": "School governor vacancy not advertised",
             "description": "Posted within a fortnight, or the board sits under quorum next term."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Freier Schulratssitz nicht ausgeschrieben",
+                "description": "In den kommenden Wochen zu veröffentlichen, sonst tagt das Gremium im nächsten Halbjahr unterhalb der Beschlussfähigkeit."
+              },
+              "en": {
+                "text": "School governor vacancy not advertised",
+                "description": "To be posted in the coming weeks, or the board sits under quorum next term."
+              }
+            }
           }
         },
         {
@@ -1114,6 +1366,18 @@
           "en": {
             "text": "School transport changes awaiting agreement",
             "description": "Requested last term. Agreed within a fortnight, or the revised route starts after half term."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Änderungen beim Schülertransport warten auf Einigung",
+                "description": "Im letzten Halbjahr beantragt. In den kommenden Wochen zu vereinbaren, sonst startet die neue Route nach den Ferien."
+              },
+              "en": {
+                "text": "School transport changes awaiting agreement",
+                "description": "Requested last term. To be agreed in the coming weeks, or the revised route starts after half term."
+              }
+            }
           }
         },
         {
@@ -1125,6 +1389,18 @@
           "en": {
             "text": "School placement appeal window closing",
             "description": "No date set, but once the window closes the placement cannot be revisited this year."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Frist für Schulplatz-Widerspruch endet bald",
+                "description": "Kein fester Termin. Ist die Frist abgelaufen, kann die Zuweisung in diesem Jahr nicht mehr überprüft werden."
+              },
+              "en": {
+                "text": "School placement appeal window closing",
+                "description": "No firm date, but once the window closes the placement cannot be revisited this year."
+              }
+            }
           }
         },
         {
@@ -1136,6 +1412,18 @@
           "en": {
             "text": "Student support plans overdue for review",
             "description": "No review scheduled or required. Several plans in one year group appear not to have been looked at since."
+          },
+          "deadline": {
+            "broad": {
+              "de": {
+                "text": "Förderpläne überfällig zur Überprüfung",
+                "description": "Vorerst keine Überprüfung geplant. Mehrere Pläne eines Jahrgangs scheinen seit ihrer Erstellung nicht angesehen worden zu sein."
+              },
+              "en": {
+                "text": "Student support plans overdue for review",
+                "description": "No review planned for now. Several plans in one year group appear not to have been looked at since."
+              }
+            }
           }
         }
       ]

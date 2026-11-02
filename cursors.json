@@ -10,14 +10,15 @@
     "B10",
     "B8"
   ],
-  "note": "`params` holds the gym dials js/cursor.js implements — the gym exports all fifteen, the other nine are retired; a retired dial switched ON is reported at boot, as is any value outside its range. `travel` and `afterPlace` are NOT gym dials: travel is the Fitts pair that sets a character's pace (baseMs + slopeMs per bit of difficulty), afterPlace is the pause after letting a case go (seconds give or take jitter of itself, redrawn per placement). Both fall back to gym behaviour when absent, so a raw gym export still loads. Speed is the one thing the gym cannot tune any more.",
+  "note": "`params` holds the gym dials js/cursor.js implements — the gym exports all fifteen, the other nine are retired; a retired dial switched ON is reported at boot, as is any value outside its range. `travel` and `afterPlace` are NOT gym dials: travel is the Fitts pair that sets a character's pace (baseMs + slopeMs per bit of difficulty), travel.vary (optional, 0…0.6) makes each case run up to that much FASTER than baseMs/slopeMs, drawn per case and never slower; afterPlace is the pause after letting a case go (seconds give or take jitter of itself, redrawn per placement). Both fall back to gym behaviour when absent, so a raw gym export still loads. Speed is the one thing the gym cannot tune any more.",
   "presets": {
     "bold": {
       "saved": "2026-09-04T09:44:31.553Z",
       "from": "bold.gym.json · gym preset \"coffe2\"",
       "travel": {
-        "baseMs": 275.105,
-        "slopeMs": 391.496
+        "baseMs": 235,
+        "slopeMs": 335,
+        "vary": 0.3
       },
       "afterPlace": {
         "seconds": 0.25,
@@ -42,7 +43,7 @@
         },
         "B10": {
           "on": true,
-          "v": 0.73
+          "v": 0.5
         },
         "B8": {
           "on": false,

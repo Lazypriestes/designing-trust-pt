@@ -11,7 +11,16 @@
      { id,
        de:{title}, en:{title},
        "ai-order": { bold:[keys…], cautious:[keys…] },
-       tiles:[{ key, de:{text,description}, en:{…} }] }
+       tiles:[{ key, de:{text,description}, en:{…},
+                deadline?:{ none|broad: { de:{…}, en:{…} } } }] }
+
+   ── deadline variants (G5) ────────────────────────────────────────
+   A tile may carry alternative wordings under `deadline`: "none" (the
+   deadline taken out) and "broad" (the deadline made vague). A round names
+   which one it shows (plan entry `deadline`); "explicit", or a tile without
+   that variant, shows the authored text above. Only the prose changes — key
+   and ai-order stay the same, so the AI still ranks as if it knew the
+   explicit deadline.
 
    `id`, `tiles[].key` and `ai-order` therefore exist exactly once and CANNOT
    diverge between languages — which is what keeps card ids ("t0"…"t5"), the
@@ -59,7 +68,12 @@ window.Tasks = (function () {
       aiOrder: t["ai-order"] || {},
       tiles: (t.tiles || []).map(tile => {
         const tl = tile[lang] || {};
-        return { key: tile.key, text: tl.text || "", description: tl.description || "" };
+        const variants = {};
+        Object.keys(tile.deadline || {}).forEach(v => {
+          const vl = tile.deadline[v][lang] || {};
+          variants[v] = { text: vl.text || tl.text || "", description: vl.description || "" };
+        });
+        return { key: tile.key, text: tl.text || "", description: tl.description || "", variants };
       }),
     };
   }
@@ -79,14 +93,13 @@ window.Tasks = (function () {
   /* Card model for one task's tiles. `id` is stable per tile ("t"+key) and is
      what placements, logs and the AI's suggestion are all expressed in.
      There is deliberately no `rank`: these tasks have no correct order. */
-  function cardsFor(id) {
+  function cardsFor(id, deadline) {
     const t = get(id);
     if (!t || !Array.isArray(t.tiles)) return [];
-    return t.tiles.map(tile => ({
-      id: "t" + tile.key,
-      title: tile.text,
-      description: tile.description || "",
-    }));
+    return t.tiles.map(tile => {
+      const v = (deadline && tile.variants && tile.variants[deadline]) || tile;
+      return { id: "t" + tile.key, title: v.text, description: v.description || "" };
+    });
   }
 
   /* The AI's suggested ranking for one task, as card ids top to bottom.
@@ -126,8 +139,9 @@ window.Tasks = (function () {
   }
 
   // Cards for a task in the deterministic inbox order (seed + task id).
-  function inboxCardsFor(id, seed) {
-    return seededShuffle(cardsFor(id), String(seed == null ? "" : seed) + ":" + id);
+  // The deadline variant changes wording only, never the order.
+  function inboxCardsFor(id, seed, deadline) {
+    return seededShuffle(cardsFor(id, deadline), String(seed == null ? "" : seed) + ":" + id);
   }
 
   return { load, get, aiRankingFor, inboxCardsFor };

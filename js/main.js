@@ -54,6 +54,7 @@
     if (!cur) return;
     if (cur.type === "survey") Survey.relocalize();
     else if (cur.type === "anonId") AnonId.relocalize();
+    else if (cur.type === "break") Flow.showBreak({ silent: true });
     else if (cur.type === "task") Task.relocalize();
     else if (cur.type === "debrief") Results.relocalize();
   }
@@ -341,6 +342,7 @@
 
     // ── survey continue ──
     $("btn-survey-next").addEventListener("click", () => Survey.submit());
+    $("btn-break-next").addEventListener("click", () => { Store.log("break_continue", {}); Flow.next(); });
 
     // ── dev bar (Skip + group picker) — hidden for participants, on via Config.CONFIG.devMode ──
     if (Config.CONFIG.devMode) {

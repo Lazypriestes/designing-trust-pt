@@ -6,6 +6,15 @@
    Question ids are data keys and are identical in both languages, so a
    language switch re-renders the questions and restores what the
    participant already typed or selected (see relocalize).
+
+   Three question types:
+     likert  numbered scale 1…`scale` (default 5). `low` / `high` label its
+             two ends; without them it falls back to ui.survey.likertLow/High
+             (the agreement anchors). Stored as a number.
+     choice  one of `options` [{value,label}]. `value` is the data key and
+             must be identical in both languages; only `label` is translated.
+             Stored as the value string.
+     text    free text. Stored trimmed.
    ═══════════════════════════════════════════════════════════════════ */
 window.Survey = (function () {
   const $ = id => document.getElementById(id);
@@ -39,21 +48,38 @@ window.Survey = (function () {
     wrap.appendChild(lbl);
 
     if (q.type === "likert") {
+      // Scale and its anchors share one box, so the end labels sit under
+      // the end points whatever the scale length.
+      const box = document.createElement("div");
+      box.className = "likert-wrap";
       const row = document.createElement("div");
       row.className = "likert";
-      for (let n = 1; n <= 5; n++) {
+      for (let n = 1; n <= (q.scale || 5); n++) {
         const opt = document.createElement("label");
         opt.className = "likert-opt";
         opt.innerHTML = `<input type="radio" name="${q.id}" value="${n}"/><span>${n}</span>`;
         row.appendChild(opt);
       }
-      wrap.appendChild(row);
+      box.appendChild(row);
       const anc = document.createElement("div");
       anc.className = "likert-anchors";
       anc.innerHTML = `<span></span><span></span>`;
-      anc.children[0].textContent = I18n.t("ui.survey.likertLow");
-      anc.children[1].textContent = I18n.t("ui.survey.likertHigh");
-      wrap.appendChild(anc);
+      anc.children[0].textContent = q.low || I18n.t("ui.survey.likertLow");
+      anc.children[1].textContent = q.high || I18n.t("ui.survey.likertHigh");
+      box.appendChild(anc);
+      wrap.appendChild(box);
+    } else if (q.type === "choice") {
+      const row = document.createElement("div");
+      row.className = "choice";
+      (q.options || []).forEach(o => {
+        const opt = document.createElement("label");
+        opt.className = "choice-opt";
+        opt.innerHTML = `<input type="radio" name="${q.id}"/><span></span>`;
+        opt.firstChild.value = o.value;
+        opt.lastChild.textContent = o.label;
+        row.appendChild(opt);
+      });
+      wrap.appendChild(row);
     } else { // text
       const ta = document.createElement("textarea");
       ta.name = q.id;
@@ -69,7 +95,7 @@ window.Survey = (function () {
   function snapshot() {
     const out = {};
     (def(currentId).questions || []).forEach(q => {
-      if (q.type === "likert") {
+      if (q.type === "likert" || q.type === "choice") {
         const el = document.querySelector(`input[name="${q.id}"]:checked`);
         if (el) out[q.id] = el.value;
       } else {
@@ -105,6 +131,9 @@ window.Survey = (function () {
       if (q.type === "likert") {
         const el = document.querySelector(`input[name="${q.id}"]:checked`);
         v = el ? +el.value : null;
+      } else if (q.type === "choice") {
+        const el = document.querySelector(`input[name="${q.id}"]:checked`);
+        v = el ? el.value : null;
       } else {
         const el = document.querySelector(`textarea[name="${q.id}"]`);
         v = el ? el.value.trim() : "";

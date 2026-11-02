@@ -15,10 +15,13 @@
    alongside on the session as `anonId`, and the two are linked in every
    export.
 
-   There is NO format check. The format is whatever the research team
-   issues, and it may change between batches; a guess about it is not worth
-   blocking someone at the door. Any non-empty value is taken as given;
-   matching it against the researchers' list is an analysis job.
+   The ID also picks the SETUP when Config.PARTICIPANT_SETUPS lists codes:
+   the session was created (and its setup pinned) before this screen, so a
+   listed code re-pins group, character, order and plan here, before any task
+   runs, and the flow is rebuilt from the new plan. An unlisted code is
+   refused, so a typo cannot run someone under the wrong condition. With the
+   table empty there is no check at all: any non-empty value is taken as
+   given and the setup stays Config.FIXED_GROUP.
 
    This replaced a Prolific-ID step on 2026-10-20, when the study stopped
    recruiting through Prolific.
@@ -54,10 +57,27 @@ window.AnonId = (function () {
     // Empty is the only refusal: without an ID the run cannot be matched.
     if (!value) { showError("ui.anonId.required"); return; }
 
+    let code = null;
+    if (Config.usesCodes()) {
+      code = Config.codeKey(value);
+      if (!code) {
+        showError("ui.anonId.unknown");
+        Store.log("anon_id_rejected", { length: value.length });
+        return;
+      }
+    }
+
     hideError();
-    Store.setAnonId(value);
-    // Length only — the ID itself is on the session, and nothing here judges it.
+    Store.setAnonId(code || value);
+    // Length only — the ID itself is on the session.
     Store.log("anon_id_entered", { length: value.length });
+    // A forced dev group stays forced; otherwise the code decides the setup.
+    if (code && !Groups.override()) {
+      const g = Config.PARTICIPANT_SETUPS[code];
+      Store.setGroup(g, "code");
+      Store.log("group_assigned", { group: g, source: "code", code });
+      Flow.build();
+    }
     Store.sendRemote();
     Flow.next();
   }

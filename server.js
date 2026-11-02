@@ -74,7 +74,34 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.static(__dirname, { dotfiles: "ignore", index: "index.html" }));
+/* `no-cache`, not express's default `max-age=0`: behind the Cloudflare tunnel
+   a bare max-age=0 is rewritten to the zone's 4-hour browser TTL, so an edit
+   to config.js or tasks.json would reach a returning browser hours late — or
+   mid-session, mixing two builds. no-cache makes every load revalidate (the
+   ETag still turns an unchanged file into a cheap 304). */
+/* ...but Cloudflare still stamps .js/.css with that 4-hour TTL (HTML it
+   leaves alone), so a browser that loaded js/task.js?v=68 once keeps running
+   that copy. index.html is therefore served with every `?v=` replaced by the
+   newest mtime of the scripts and stylesheet: an edit changes the URL, and
+   the URL is what the browser cache is keyed on. */
+function assetVersion() {
+  const files = [path.join(__dirname, "styles-accessible.css")];
+  for (const f of fs.readdirSync(path.join(__dirname, "js"))) {
+    if (f.endsWith(".js")) files.push(path.join(__dirname, "js", f));
+  }
+  return Math.max(...files.map(f => fs.statSync(f).mtimeMs)).toString(36).replace(".", "");
+}
+app.get(["/", "/index.html"], (req, res, next) => {
+  fs.readFile(path.join(__dirname, "index.html"), "utf8", (err, html) => {
+    if (err) return next();
+    res.setHeader("Cache-Control", "no-cache");
+    res.type("html").send(html.replace(/\?v=[\w.]+/g, "?v=" + assetVersion()));
+  });
+});
+app.use(express.static(__dirname, {
+  dotfiles: "ignore", index: "index.html",
+  setHeaders: res => res.setHeader("Cache-Control", "no-cache"),
+}));
 
 /* participantId → a safe, non-empty filename stem. */
 function safeId(raw) {

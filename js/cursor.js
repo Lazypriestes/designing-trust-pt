@@ -106,6 +106,8 @@ window.Cursor = (function () {
      clamp bites there is bitten identically here. On our board the longest
      legitimate travel is ~1.5 s, so it never bites in practice. */
   const LEG_MIN_MS = 70, LEG_MAX_MS = 3000;
+  const TRAVEL_VARY_MAX = 0.6;
+  let pace = 1;                         // this case's share of the leg time (drawPace)
 
   const ZERO = { x: 0, y: 0 };
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -217,6 +219,8 @@ window.Cursor = (function () {
     const t = {
       baseMs:  num(raw.baseMs,  TRAVEL_DEFAULT.baseMs,  "baseMs"),
       slopeMs: num(raw.slopeMs, TRAVEL_DEFAULT.slopeMs, "slopeMs"),
+      // per-case speed-up, 0…TRAVEL_VARY_MAX of the leg — see drawPace()
+      vary: clamp(Number(raw.vary) || 0, 0, TRAVEL_VARY_MAX),
     };
     /* LEG_MAX_MS used to be unreachable — A9 could only slow a leg so far.
        With the constants stated outright it is a real ceiling, and a pair
@@ -335,6 +339,7 @@ window.Cursor = (function () {
   function use(character) {
     activeName = character || null;
     active = (character && profiles[character]) || null;
+    pace = 1;
     if (character && !active) {
       console.error(`[BDR] no cursor profile for character "${character}" in cursors.json — ` +
                     `the AI cursor will move with every dial off (a plain straight line).`);
@@ -395,12 +400,22 @@ window.Cursor = (function () {
     return bell(u) + ((1 - Math.pow(1 - u, 2.6)) - bell(u)) * v;     // toward impulse & glide
   }
 
+  /* travel.vary: each case draws its own pace, between (1 − vary) and 1 of
+     the authored leg time — so a run of quick cases, then a slightly slower
+     one, but never slower than baseMs/slopeMs say. Drawn once per case by
+     the task's planner, so the reach and the carry of one case match. */
+  function drawPace() {
+    const v = (active && active.travel.vary) || 0;
+    pace = 1 - Math.random() * v;
+    return pace;
+  }
+
   /* Fitts' law on the distance and the target's width, with this character's
      own travel pair. `w` is the target's short side — for our cases and slots
      that is the height, which is what the accuracy demand actually is. */
   function legMs(dist, w) {
     const t = travel();
-    return clamp(t.baseMs + t.slopeMs * Math.log2(dist / (w || 56) + 1), LEG_MIN_MS, LEG_MAX_MS);
+    return clamp((t.baseMs + t.slopeMs * Math.log2(dist / (w || 56) + 1)) * pace, LEG_MIN_MS, LEG_MAX_MS);
   }
   // A correction leg is shorter than the ballistic one it is fixing.
   const correctionMs = ms => clamp(ms * 0.55, 60, 420);
@@ -499,7 +514,7 @@ window.Cursor = (function () {
 
   return {
     // used by the prototype
-    MOTION, load, use, has, dials, travel, afterPlace, afterPlaceMs,
+    MOTION, load, use, has, dials, travel, afterPlace, afterPlaceMs, drawPace,
     offset, ease, legMs, correctionMs, buildLeg, buildPath, subTargets, forethought,
 
     /* Console seam. Nothing in the prototype calls these — they are here so

@@ -94,7 +94,8 @@ window.Store = (function () {
 
   function setStep(i) { if (data) { data.currentStep = i; save(); } }
   function setLang(l) { if (data) { data.lang = l; save(); } }
-  /* Only the dev picker changes the group after the session has started.
+  /* Two things change the group after the session has started: the
+     participant's code on the ID step (before any task), and the dev picker.
      The group now decides the character AND the mechanic order, and the plan
      is built from that order — so all four move together or the session would
      contradict itself. The rebuilt plan has the same length (both orders run

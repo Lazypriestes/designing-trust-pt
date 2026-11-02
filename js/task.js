@@ -53,6 +53,18 @@ window.Task = (function () {
   let taskId, taskDef, planIndex, character, block;
   let handoff = false;      // shared-cursor stage: the AI takes over from the activation zone
   let hiddenAi = false;     // "Start AI" stage: one press places everything, no cursor
+  /* G5's three round types (Config.MECHANICS):
+       observeAi — the cursor sorts the board by itself; hands off until it is done
+       endHidden — the participant sorts, then "Done" → one hidden re-sort, then locked
+       endShow   — the participant sorts, then "Done" → the cursor re-sorts their
+                   board in view, then locked
+     `endPhase` walks the two end rounds through "sort" → "ai" → "locked". */
+  let observeAi = false, endHidden = false, endShow = false;
+  let endPhase = null;
+  let userRanking = null;   // the end rounds: the participant's own order, before the AI's
+  let deadline = null;      // which deadline wording this round's tiles show
+  let resortAt = 0, resortDone = false;   // G5: the n-th case goes down wrong once (Config.RESORT_HOLD_MS)
+  const cursorAi = () => handoff || observeAi || endShow;
   let aiTakeovers = 0, userTakebacks = 0, aiPlacedCount = 0;
   /* Who did the work, counted two ways because they answer different questions.
        *PlacedCount  — ACTIONS. A case the AI placed and the participant then
@@ -182,7 +194,7 @@ window.Task = (function () {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && hiddenFlying) finishHiddenPlacement(runId);
     });
-    $("btn-confirm").addEventListener("click", confirm);
+    $("btn-confirm").addEventListener("click", onConfirmClick);
     $("explainer-ok").addEventListener("click", explainerOk);
     $("btn-explainer").addEventListener("click", function () { showExplainer(false); });
 
@@ -217,23 +229,33 @@ window.Task = (function () {
        can change the group between rounds, and re-entering this task
        (Flow.render) then picks the new setup up. The mechanic, by contrast,
        comes off the STEP — it is a property of the round now, not the session. */
-    character = Store.character();
+    /* A G5 round can fix its own AI (rounds 2–7 alternate the two); every
+       other round uses the session's. */
+    character = (step.character && Config.isCharacter(step.character)) ? step.character : Store.character();
     group = Store.group();
     cond = Config.conditionFor(step);
     aiMode = cond.ai;
     handoff = (aiMode === "handoff");
     hiddenAi = (aiMode === "hidden");
+    observeAi = (aiMode === "observe");
+    endHidden = (aiMode === "hiddenEnd");
+    endShow = (aiMode === "showEnd");
+    endPhase = (endHidden || endShow) ? "sort" : null;
+    userRanking = null;
+    deadline = step.deadline || null;
+    resortAt = (observeAi && character === "cautious") ? (step.resort | 0) : 0;
+    resortDone = false;
     /* Pin the cursor's motion character alongside its ranking. Both come from
        the same `character`, so the AI that recommends this order is also the
        one that moves this way — re-pinned per round rather than once, because
        the dev group picker can change the session's character between rounds. */
-    if (handoff) Cursor.use(character);
+    if (cursorAi()) Cursor.use(character);
     aiTakeovers = 0; userTakebacks = 0; aiPlacedCount = 0;
     userPlacedCount = 0; ladderReorders = 0; slotAuthor = Array(6).fill(null);
     aiStalled = false;
     taskDef = Tasks.get(taskId);
 
-    cards = Tasks.inboxCardsFor(taskId, Config.SHUFFLE_SEED); // deterministic per task
+    cards = Tasks.inboxCardsFor(taskId, Config.SHUFFLE_SEED, deadline); // deterministic per task
     byId = Object.fromEntries(cards.map(c => [c.id, c]));
     aiRanking = (aiMode === "solo") ? [] : Tasks.aiRankingFor(taskId, character);
     inbox = [...cards];
@@ -264,7 +286,7 @@ window.Task = (function () {
 
     Store.log("task_start", {
       stage, group, condition: cond.key, aiMode, character, block,
-      taskId, lang: I18n.get(),
+      taskId, deadline, lang: I18n.get(),
       newSection, explainerAutoShown: newSection,
       inboxOrder: cards.map(c => c.id),
       aiSuggestion: [...aiRanking],
@@ -284,7 +306,7 @@ window.Task = (function () {
        a repeat it has to be started here instead. Nothing moves on its own
        either way — the AI only takes over once the cursor is parked in the
        activation zone. */
-    pendingCursorStart = handoff;
+    pendingCursorStart = handoff || observeAi;   // the end rounds start theirs on "Done"
     if (newSection) {
       showExplainer(true);
     } else {
@@ -530,6 +552,8 @@ window.Task = (function () {
        transition) so a language switch mid-stage picks the phase up correctly. */
     let hintText = I18n.t(`ui.task.hints.${aiMode}`);
     if (aiState === "done") hintText = I18n.t("ui.task.aiDone");
+    if (endPhase === "ai") hintText = I18n.t("ui.task.endRunning");
+    if (endPhase === "locked") hintText = I18n.t(endShow ? "ui.task.endLockedLast" : "ui.task.endLocked");
     $("hint").textContent = hintText;
 
     const badge = $("b-badge");
@@ -552,7 +576,7 @@ window.Task = (function () {
 
     $("btn-explainer").textContent = I18n.t("ui.task.explainerBtn");
     $("explainer-ok").textContent = I18n.t("ui.task.explainerOk");
-    $("btn-confirm").textContent = I18n.t("ui.task.confirm");
+    $("btn-confirm").textContent = confirmLabel();
     $("inbox-hd").textContent = I18n.t("ui.task.inboxHd", { n: inbox.length });
     $("ladder-hd").textContent = I18n.t("ui.task.ladderHd");
   }
@@ -563,7 +587,7 @@ window.Task = (function () {
   function relocalize() {
     if (!cond) return;
     const inboxIds = inbox.map(c => c.id);           // card ids survive the switch
-    cards = Tasks.inboxCardsFor(taskId, Config.SHUFFLE_SEED);
+    cards = Tasks.inboxCardsFor(taskId, Config.SHUFFLE_SEED, deadline);
     byId = Object.fromEntries(cards.map(c => [c.id, c]));
     inbox = inboxIds.map(id => byId[id]).filter(Boolean);  // keep the on-screen order
     setupChrome();
@@ -593,7 +617,38 @@ window.Task = (function () {
     if (hiddenFlying) {
       document.querySelectorAll("#ladder .card").forEach(el => el.classList.add("in-flight"));
     }
-    $("btn-confirm").disabled = hiddenFlying || !slots.every(Boolean);
+    $("btn-confirm").disabled = hiddenFlying || !slots.every(Boolean)
+      || endPhase === "ai" || (observeAi && aiState !== "done");
+    $("btn-confirm").textContent = confirmLabel();
+  }
+
+  /* The footer button does three jobs in the G5 end rounds: "Done sorting"
+     hands the board to the AI, and once it is locked "Next task" / "Finish"
+     moves on. Everywhere else it confirms the ranking. */
+  function confirmLabel() {
+    if (endPhase === "sort") return I18n.t("ui.task.doneSorting");
+    if (endPhase === "ai" || endPhase === "locked") return I18n.t(endShow ? "ui.task.finish" : "ui.task.next");
+    return I18n.t("ui.task.confirm");
+  }
+
+  function onConfirmClick() {
+    if (endPhase === "sort") startEndAi();
+    else if (endPhase !== "ai") confirm();
+  }
+
+  /* "Done sorting": keep the participant's own order on record, then let the
+     AI rework it — in one hidden flight, or with the cursor in view. Either
+     way the board locks once it has finished (see finishHiddenPlacement and
+     autoFinish). */
+  function startEndAi() {
+    if (!slots.every(Boolean) || drag) return;
+    userRanking = [...slots];
+    endPhase = "ai";
+    Store.log("end_ai_started", { taskId, aiMode, character, userRanking: [...userRanking], aiSuggestion: [...aiRanking] });
+    setupChrome();
+    render();
+    if (endHidden) startHiddenPlacement();
+    else autoStart();
   }
 
   function renderInbox() {
@@ -661,6 +716,8 @@ window.Task = (function () {
   function onMouseDown(e) {
     if (e.button !== 0) return;
     if (hiddenFlying) return;      // the tiles are in the air; nothing to grab yet
+    if (endPhase === "ai" || endPhase === "locked") return;   // G5 end rounds: the AI's turn, then final
+    if (observeAi && aiState !== "done") return;              // G5: watch first, rearrange after
     const card = e.currentTarget;
     const id = card.dataset.id;
     const from = card.dataset.from === "inbox" ? "inbox" : +card.dataset.from;
@@ -868,7 +925,7 @@ window.Task = (function () {
      up from the inbox. A case the participant placed is left alone even if
      the AI would rather have it somewhere else. */
   function hiddenTargetBoard() {
-    if (placementStyle() !== "B") {
+    if (endHidden || placementStyle() !== "B") {   // the G5 end round always re-sorts everything
       return { next: [...aiRanking], moved: aiRanking.filter(Boolean) };
     }
     const next = [...slots];
@@ -883,7 +940,7 @@ window.Task = (function () {
   }
 
   function startHiddenPlacement() {
-    if (!hiddenAi || hiddenPlaced || hiddenFlying || drag) return;
+    if (!(hiddenAi || endHidden) || hiddenPlaced || hiddenFlying || drag) return;
     const myRun = runId;
     hiddenPlaced = true;
     hiddenFlying = true;
@@ -969,6 +1026,7 @@ window.Task = (function () {
        and start the review clock only when there is an order to review. */
     const boardFull = slots.every(Boolean);
     $("hint").textContent = I18n.t(boardFull ? "ui.task.aiDone" : "ui.task.aiStopped");
+    if (endHidden) { endPhase = "locked"; setupChrome(); }
     render();
     if (boardFull) allPlacedAt = performance.now();
     Store.log("hidden_done", {
@@ -1010,7 +1068,9 @@ window.Task = (function () {
   const fittsW = r => clamp(Math.min(r.width, r.height), 30, 200);
 
   function tileCenter(id) {
-    const el = document.querySelector(`#inbox [data-id="${id}"]`);
+    // The showEnd round picks tiles up off the board, not only out of the inbox.
+    const el = document.querySelector(`#inbox [data-id="${id}"]`)
+            || ((endShow || resortAt) ? document.querySelector(`#ladder [data-id="${id}"]`) : null);
     if (!el) return null;
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, fw: fittsW(r) };
@@ -1090,6 +1150,8 @@ window.Task = (function () {
      placement puts one case in its final slot for good, so it still converges
      in at most six. */
   function planJob() {
+    Cursor.drawPace();                 // this case's own speed (cursors.json travel.vary)
+    if (endShow) { planRearrange(); return; }
     /* Holding the cursor with nothing it is allowed to place. Only reachable
        in the gap between the last case landing and autoFinish() noticing, so
        it just waits out a beat. (B21 used to drift the cursor around here;
@@ -1111,6 +1173,7 @@ window.Task = (function () {
     });
     const cc = target && tileCenter(target.id);
     if (!cc) { pushPause(300); return; }
+    if (resortAt && !resortDone && slotIdx === resortAt - 1) { resortDone = true; planResort(target, cc, slotIdx, pool); return; }
 
     // reach for the tile — the other cases it could have taken instead
     const others = pool.filter(c => c.id !== target.id).map(c => tileCenter(c.id)).filter(Boolean);
@@ -1143,8 +1206,68 @@ window.Task = (function () {
     pushPause(Cursor.afterPlaceMs());
   }
 
+  /* G5 resort: the same pick-up as planJob, but the case goes down in a wrong
+     empty slot first (two below its own where it can), sits there for
+     Config.RESORT_HOLD_MS, and is then picked up again and moved to the slot
+     it belongs in. The final board is unchanged — only the path to it. */
+  function planResort(target, cc, slotIdx, pool) {
+    const empty = slots.map((id, i) => (!id && i !== slotIdx) ? i : -1).filter(i => i !== -1);
+    if (!empty.length) { resortAt = 0; planJob(); return; }
+    const decoy = empty.indexOf(slotIdx + 2) !== -1 ? slotIdx + 2
+      : empty.slice().sort((a, b) => Math.abs(a - slotIdx) - Math.abs(b - slotIdx))[0];
+    Store.log("ai_resort", { cardId: target.id, wrongSlot: decoy, slot: slotIdx, atMs: sinceStart() });
+
+    const others = pool.filter(c => c.id !== target.id).map(c => tileCenter(c.id)).filter(Boolean);
+    pushReach({ x: fc.x, y: fc.y }, cc, others, cc.fw);
+    pushPause(Cursor.MOTION.grabDwell);
+    pushGrab(target.id);
+
+    const dc = slotCenter(decoy) || { x: fc.x, y: fc.y, fw: 56 };
+    pushReach(cc, dc, null, dc.fw);
+    pushPause(Cursor.MOTION.dropDwell);
+    pushDrop(decoy);
+
+    pushPause(Config.RESORT_HOLD_MS || 1000);                // second thoughts
+    pushPause(Cursor.MOTION.grabDwell);
+    pushGrab(target.id);
+
+    const sc = slotCenter(slotIdx) || dc;
+    pushReach(dc, sc, null, sc.fw);
+    pushPause(Cursor.MOTION.dropDwell);
+    pushDrop(slotIdx);
+    pushPause(Cursor.MOTION.beat);
+    pushPause(Cursor.afterPlaceMs());
+  }
+
+  /* showEnd: the board is already full — the participant's order. Work down
+     the AI's ranking, slot 1 first: fetch the case that belongs in the first
+     wrong slot from wherever it sits on the board and drop it there. The case
+     it displaces swaps into the slot it came from, so every move fixes one
+     slot for good and the AI is done in at most five. */
+  function planRearrange() {
+    const slotIdx = aiRanking.findIndex((id, i) => id && slots[i] !== id);
+    if (slotIdx === -1) { aiStalled = fc.carrying == null; pushPause(300); return; }
+    aiStalled = false;
+    const id = aiRanking[slotIdx];
+    const cc = tileCenter(id);
+    const sc = slotCenter(slotIdx);
+    if (!cc || !sc) { pushPause(300); return; }
+    pushReach({ x: fc.x, y: fc.y }, cc, null, cc.fw);
+    pushPause(Cursor.MOTION.grabDwell);
+    pushGrab(id);
+    pushReach(cc, sc, null, sc.fw);
+    pushPause(Cursor.MOTION.dropDwell);
+    pushDrop(slotIdx);
+    pushPause(Cursor.MOTION.beat);
+    pushPause(Cursor.afterPlaceMs());
+  }
+
+  // The showEnd cursor's speed, relative to the character's own (Config.END_CURSOR_PACE).
+  const paceScale = () => (endShow ? (Config.END_CURSOR_PACE || 1) : 1);
+
   function startSegment() {
     fc.seg = fc.queue.shift() || null;
+    if (fc.seg && fc.seg.type === "pause") { fc.seg.dur *= paceScale(); return; }
     if (!fc.seg || fc.seg.type !== "move") return;
     const s = fc.seg;
     const p0 = { x: fc.x, y: fc.y };
@@ -1155,6 +1278,7 @@ window.Task = (function () {
     s.dur = s.fixedMs != null ? s.fixedMs
           : s.correction ? Cursor.correctionMs(base)
           : base;
+    s.dur *= paceScale();
     s.t = 0;
   }
 
@@ -1179,9 +1303,10 @@ window.Task = (function () {
 
     } else if (s.type === "grab") {
       const ctr = tileCenter(s.id);
-      if (ctr && inbox.some(c => c.id === s.id)) {
+      if (ctr && (inbox.some(c => c.id === s.id) || ((endShow || resortAt) && slots.indexOf(s.id) !== -1))) {
         fc.carrying = s.id;
-        const src = document.querySelector(`#inbox [data-id="${s.id}"]`);
+        const src = document.querySelector(`#inbox [data-id="${s.id}"]`)
+                 || document.querySelector(`#ladder [data-id="${s.id}"]`);
         if (src) src.classList.add("ghost");   // dim in place; it leaves the inbox on drop
         ghostShow(s.id, ctr.w);
         ghostMoveTo(fc.x - 26, fc.y - 20);
@@ -1197,9 +1322,11 @@ window.Task = (function () {
         clearSlotMarks();
         clickPulse();
         aiPlacedCount++;
+        const from = slots.indexOf(id);
+        if (from !== -1) slotAuthor[from] = slotAuthor[s.slot];   // the swapped-out case keeps its author
         slotAuthor[s.slot] = "ai";
-        Store.log("ai_placement", { cardId: id, slot: s.slot, atMs: sinceStart() });
-        placeCard(id, "inbox", s.slot);
+        Store.log("ai_placement", { cardId: id, slot: s.slot, from: from === -1 ? "inbox" : `slot_${from}`, atMs: sinceStart() });
+        placeCard(id, from === -1 ? "inbox" : from, s.slot);
         render();
       }
       fc.seg = null;
@@ -1274,6 +1401,7 @@ window.Task = (function () {
        style B the participant still has cases to place, and "all cases are
        placed" would send them looking for a Confirm they cannot press. */
     $("hint").textContent = I18n.t(boardFull ? "ui.task.aiDone" : "ui.task.aiStopped");
+    if (endShow) { endPhase = "locked"; setupChrome(); }
     render();
     /* reviewMs measures looking a FINISHED order over. There is nothing to
        review yet when the board is part-empty, so it starts only on a full one. */
@@ -1353,16 +1481,21 @@ window.Task = (function () {
     const dt = Math.min(2000, now - prevTs);
     prevTs = now; lastStepTs = now;
 
-    const complete = slots.every(Boolean);
+    const full = slots.every(Boolean);
+    // showEnd starts from a full board, so "full" cannot be what ends its turn.
+    const complete = full && !endShow;
     /* Style B can finish with the board part-empty: it stops rather than
        undo the participant, and the rest is theirs to place. A and C only
        ever stop on a full board. */
     const stalled = aiStalled && fc.carrying == null;
-    if (fc.active && (complete || stalled)) autoFinish(complete);
+    if (fc.active && (complete || stalled)) autoFinish(full);
     // Handoff: the AI steps in while the real cursor rests inside the
     // activation zone. Leaving the zone hands control back (see wire()).
     else if (handoff && !complete && !fc.active && !fc.returning && !drag
              && pointerInZone) activateFake();
+    // G5: observe and showEnd hand the AI the cursor straight away, once.
+    else if ((observeAi || endPhase === "ai") && !complete && !fc.active && !fc.done
+             && !fc.returning && !drag) activateFake();
 
     const targetOp = (fc.active || fc.returning) ? 1 : 0;
     const rate = fc.active ? dt / AUTO.fadeInMs : dt / AUTO.fadeOutMs;
@@ -1373,7 +1506,7 @@ window.Task = (function () {
       // Consume dt in frame-sized slices so one long tick can advance several
       // queued segments rather than just one.
       let remaining = dt, guard = 0;
-      while (remaining > 0 && fc.active && guard++ < 64 && !slots.every(Boolean)) {
+      while (remaining > 0 && fc.active && guard++ < 64 && !(full && !endShow)) {
         const slice = Math.min(remaining, 32);
         updateMotion(slice);
         remaining -= slice;
@@ -1447,8 +1580,10 @@ window.Task = (function () {
     }
     const result = {
       stage, group, condition: cond.key, aiMode, character, block,
-      taskId, lang: I18n.get(),
+      taskId, deadline, lang: I18n.get(),
       ranking: [...slots],
+      // G5 end rounds: the participant's own order, before the AI reworked it
+      userRanking: userRanking ? [...userRanking] : null,
       aiSuggestion: [...aiRanking],   // what they were departing from, on the result itself
       overrides: countOverrides(),
       /* Shared-control behaviour. aiTakeovers counts every time the AI was
@@ -1474,10 +1609,10 @@ window.Task = (function () {
       slotAuthor: [...slotAuthor],
       ladderReorders,
       placementStyle: (aiMode === "solo") ? null : placementStyle(),
-      cursorCharacter: handoff ? character : null,
-      cursorDials: handoff ? Cursor.dials() : null,
-      cursorTravel: handoff ? Cursor.travel() : null,
-      cursorAfterPlace: handoff ? Cursor.afterPlace() : null,
+      cursorCharacter: cursorAi() ? character : null,
+      cursorDials: cursorAi() ? Cursor.dials() : null,
+      cursorTravel: cursorAi() ? Cursor.travel() : null,
+      cursorAfterPlace: cursorAi() ? Cursor.afterPlace() : null,
       ...timing,
     };
     Store.log("task_confirm", {

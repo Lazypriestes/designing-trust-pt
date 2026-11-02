@@ -15,7 +15,9 @@
 
    `groupSource` still rides on every session, because it still has two
    values worth telling apart:
-     "config" — Config.FIXED_GROUP, the normal case
+     "config" — Config.FIXED_GROUP, until the ID step says otherwise
+     "code"   — re-pinned from the participant's code on the ID step
+                (Config.PARTICIPANT_SETUPS; see js/anon-id.js)
      "dev"    — forced from the dev picker, so a test session is legible as
                 one when the data is counted
 
